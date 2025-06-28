@@ -1,9 +1,11 @@
 package com.precious.finance_tracker.dtos.user;
 
+import lombok.Getter;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+@Getter
 public class PagedUserResponseDto {
     private List<UserResponseDto> users;
 

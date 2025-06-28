@@ -1,7 +1,6 @@
 package com.precious.finance_tracker.dtos.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.precious.finance_tracker.entities.User;
 import com.precious.finance_tracker.enums.Currency;
 import com.precious.finance_tracker.enums.Roles;
@@ -14,24 +13,24 @@ import java.util.UUID;
 @Data
 @Builder
 public class UserResponseDto {
-    private UUID id;
+    private final UUID id;
 
-    private String name;
+    private final String name;
 
-    private String email;
+    private final String email;
 
-    private Currency currency;
+    private final Currency currency;
 
-    private boolean isVerified;
+    private final boolean isVerified;
 
-    private Roles role;
+    private final Roles role;
 
     @JsonIgnore
-    private String otp;
+    private final String otp;
 
-    private LocalDateTime createdAt;
+    private final LocalDateTime createdAt;
 
-    private LocalDateTime updatedAt;
+    private final LocalDateTime updatedAt;
 
     public static UserResponseDto fromEntity(User user) {
         return UserResponseDto.builder()

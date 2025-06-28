@@ -14,6 +14,8 @@ import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.UserRepository;
 import jakarta.mail.MessagingException;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -27,6 +29,8 @@ import java.time.LocalDateTime;
 @Data
 @Transactional
 public class AuthService {
+    private static Logger log = LoggerFactory.getLogger(AuthService.class.getName());
+
     private final UserService userService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -37,18 +41,14 @@ public class AuthService {
     public BaseResponseDto<UserResponseDto> registerUser(RegisterUserDto dto) {
         User createdUser = this.userService.createUser(dto);
 
-        try {
-            this.emailService.sendOtpEmail(
-                    VerifyEmailDto.builder()
-                            .firstName(dto.getFirstName())
-                            .recipientEmail(dto.getEmail())
-                            .otp(createdUser.getOtp())
-                            .purpose(EmailPurpose.email_verification)
-                            .build()
-            );
-        } catch (MessagingException e) {
-            throw new InternalServerError("An error occurred while sending email");
-        }
+        this.emailService.sendOtpEmailAsync(
+                VerifyEmailDto.builder()
+                        .firstName(dto.getFirstName())
+                        .recipientEmail(dto.getEmail())
+                        .otp(createdUser.getOtp())
+                        .purpose(EmailPurpose.email_verification)
+                        .build()
+        );
 
         return BaseResponseDto.<UserResponseDto>builder()
                 .status("Success")
@@ -83,7 +83,7 @@ public class AuthService {
     }
 
     public BaseResponseDto<AuthResponseDto> verifyOtp(VerifyOtpDto dto) {
-        User user = this.userRepository.findByEmail(dto.getEmail())
+        User user = this.userRepository.findByEmailAndDeletedAtIsNull(dto.getEmail())
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (!user.getOtp().equals(dto.getOtp()) || user.getOtpExpiredAt().isBefore(LocalDateTime.now())) {
@@ -108,37 +108,33 @@ public class AuthService {
     }
 
     public BaseResponseDto<Object> resendOtp(String email, EmailPurpose purpose) {
-        User user = this.userRepository.findByEmail(email)
+        User user = this.userRepository.findByEmailAndDeletedAtIsNull(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         user.setOtp(this.emailService.generateOtp());
         user.setOtpExpiredAt(LocalDateTime.now().plusMinutes(10));
         user.setIsVerified(false);
 
-        System.out.println(this.userRepository.save(user));
+        this.userRepository.save(user);
 
-        try {
-            if (purpose == EmailPurpose.resend_otp) {
-                this.emailService.sendOtpEmail(
-                        VerifyEmailDto.builder()
-                                .firstName(user.getName().split(" ")[0])
-                                .recipientEmail(user.getEmail())
-                                .otp(user.getOtp())
-                                .purpose(EmailPurpose.resend_otp)
-                                .build()
-                );
-            } else {
-                this.emailService.sendOtpEmail(
-                        VerifyEmailDto.builder()
-                                .firstName(user.getName().split(" ")[0])
-                                .recipientEmail(user.getEmail())
-                                .otp(user.getOtp())
-                                .purpose(EmailPurpose.forgot_password)
-                                .build()
-                );
-            }
-        } catch (MessagingException e) {
-            throw new InternalServerError("An error occurred while sending email");
+        if (purpose == EmailPurpose.resend_otp) {
+            this.emailService.sendOtpEmailAsync(
+                    VerifyEmailDto.builder()
+                            .firstName(user.getName().split(" ")[0])
+                            .recipientEmail(user.getEmail())
+                            .otp(user.getOtp())
+                            .purpose(EmailPurpose.resend_otp)
+                            .build()
+            );
+        } else {
+            this.emailService.sendOtpEmailAsync(
+                    VerifyEmailDto.builder()
+                            .firstName(user.getName().split(" ")[0])
+                            .recipientEmail(user.getEmail())
+                            .otp(user.getOtp())
+                            .purpose(EmailPurpose.forgot_password)
+                            .build()
+            );
         }
 
         return BaseResponseDto.builder()
@@ -149,7 +145,7 @@ public class AuthService {
     }
 
     public BaseResponseDto<Object> resetPassword(ResetPasswordDto dto) {
-        User user = this.userRepository.findByOtp(dto.getOtp())
+        User user = this.userRepository.findByOtpAndDeletedAtIsNull(dto.getOtp())
                 .orElseThrow(() -> new BadRequestException("Invalid OTP"));
 
         if (user.getOtpExpiredAt().isBefore(LocalDateTime.now())) {

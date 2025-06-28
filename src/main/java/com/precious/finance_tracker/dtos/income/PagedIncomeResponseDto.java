@@ -1,10 +1,12 @@
 package com.precious.finance_tracker.dtos.income;
 
 import com.precious.finance_tracker.entities.Income;
+import lombok.Getter;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
+@Getter
 public class PagedIncomeResponseDto {
     private final List<Income> income;
 

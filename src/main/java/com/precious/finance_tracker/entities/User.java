@@ -14,12 +14,13 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = true)
+
 @Entity(name = "_user")
-@Data
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 public class User extends AbstractBaseEntity implements UserDetails {
     @Column(nullable = false)
     private String name;

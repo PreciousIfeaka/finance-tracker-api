@@ -4,6 +4,8 @@ import com.precious.finance_tracker.dtos.error.ExceptionResponseDto;
 import com.precious.finance_tracker.dtos.error.ValidationResponseDto;
 import com.precious.finance_tracker.exceptions.*;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,10 +17,15 @@ import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class.getName());
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<HashMap<String, List<ValidationResponseDto>>> handleValidationException(
             MethodArgumentNotValidException e
     ) {
+        log.error("MethodArgumentNotValidException: {}", e.getMessage());
+
         List<ValidationResponseDto> errorList = e.getBindingResult().getFieldErrors().stream()
                 .map(error ->
                         ValidationResponseDto.builder()
@@ -38,6 +45,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<HashMap<String, List<ValidationResponseDto>>> handleConstraintViolation(
             ConstraintViolationException e
     ) {
+        log.error("ConstraintViolationException: {}", e.getMessage());
+
         List<ValidationResponseDto> errorList = e.getConstraintViolations().stream()
                 .map(error ->
                         ValidationResponseDto.builder()
@@ -56,6 +65,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleUnauthorizedException(
             UnauthorizedException e
     ) {
+        log.error("UnauthorizedException: {}", e.getMessage());
+
         ExceptionResponseDto errorResponse = ExceptionResponseDto.builder()
                 .status("Unauthorized")
                 .message(e.getMessage())
@@ -69,6 +80,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleBadRequestException(
             BadRequestException e
     ) {
+        log.error("BadRequestException: {}", e.getMessage());
+
         ExceptionResponseDto errorResponse = ExceptionResponseDto.builder()
                 .message(e.getMessage())
                 .status("Bad Request")
@@ -82,6 +95,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleForbiddenException(
             ForbiddenException e
     ) {
+        log.error("ForbiddenException: {}", e.getMessage());
+
         ExceptionResponseDto errorResponse = ExceptionResponseDto.builder()
                 .message(e.getMessage())
                 .status("Forbidden")
@@ -95,6 +110,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ExceptionResponseDto> handleNotFoundException(
             NotFoundException e
     ) {
+        log.error("NotFoundException: {}", e.getMessage());
+
         ExceptionResponseDto errorResponse = ExceptionResponseDto.builder()
                 .message(e.getMessage())
                 .status("Not found")
@@ -106,6 +123,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InternalServerError.class)
     public ResponseEntity<ExceptionResponseDto> handleInternalServerError(InternalServerError e) {
+        log.error("Internal Server Error: {}", e.getMessage());
+
         ExceptionResponseDto errorResponse = ExceptionResponseDto.builder()
                 .status("Internal Server Error")
                 .message(e.getMessage())
@@ -117,6 +136,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponseDto> handleGeneric(Exception e) {
+        log.error("GenericException: {}", e.getMessage());
+
         String message = e.getMessage().split("\\R", 2)[0];
 
         if (message.contains("duplicate key") && e.getMessage().contains("email")) {

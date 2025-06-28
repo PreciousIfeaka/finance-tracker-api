@@ -28,6 +28,7 @@ abstract class AbstractBaseEntity {
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    private LocalDateTime deletedAt;
 }
