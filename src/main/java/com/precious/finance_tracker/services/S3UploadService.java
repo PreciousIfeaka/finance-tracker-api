@@ -2,6 +2,7 @@ package com.precious.finance_tracker.services;
 
 import com.precious.finance_tracker.configurations.S3Config;
 import com.precious.finance_tracker.dtos.BaseResponseDto;
+import com.precious.finance_tracker.services.interfaces.IS3UploadService;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 @Service
 @Data
-public class S3UploadService {
+public class S3UploadService implements IS3UploadService {
     @Value("${s3.public.base-url}")
     private String s3PublicBaseUrl;
 

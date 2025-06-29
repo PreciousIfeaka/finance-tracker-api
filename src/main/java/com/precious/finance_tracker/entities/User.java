@@ -31,11 +31,6 @@ public class User extends AbstractBaseEntity implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    @Column(
-            columnDefinition = "BOOLEAN DEFAULT false",
-            nullable = false,
-            name = "is_verified"
-    )
     private Boolean isVerified = false;
 
     @Enumerated(EnumType.STRING)
@@ -52,9 +47,17 @@ public class User extends AbstractBaseEntity implements UserDetails {
     @Column()
     private LocalDateTime otpExpiredAt;
 
+    private String avatarUrl;
+
+    private Boolean limitExceeded;
+
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private List<Income> incomes;
+
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private List<Expense> expenses;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -4,9 +4,5 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Data
-public class MonthlyIncomeStatsResponseDto {
-    private final String month;
-
-    private final BigDecimal total;
+public record MonthlyIncomeStatsResponseDto(String month, BigDecimal total) {
 }

@@ -2,6 +2,7 @@ package com.precious.finance_tracker.services;
 
 import com.precious.finance_tracker.dtos.email.VerifyEmailDto;
 import com.precious.finance_tracker.enums.EmailPurpose;
+import com.precious.finance_tracker.services.interfaces.IEmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.Data;
@@ -19,7 +20,7 @@ import java.util.Map;
 
 @Service
 @Data
-public class EmailService {
+public class EmailService implements IEmailService {
     private static Logger log = LoggerFactory.getLogger(EmailService.class.getName());
 
     private final JavaMailSender javaMailSender;

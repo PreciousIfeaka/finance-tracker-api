@@ -9,10 +9,11 @@ import com.precious.finance_tracker.entities.User;
 import com.precious.finance_tracker.enums.EmailPurpose;
 import com.precious.finance_tracker.exceptions.BadRequestException;
 import com.precious.finance_tracker.exceptions.ForbiddenException;
-import com.precious.finance_tracker.exceptions.InternalServerError;
 import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.UserRepository;
-import jakarta.mail.MessagingException;
+import com.precious.finance_tracker.services.interfaces.IAuthService;
+import com.precious.finance_tracker.services.interfaces.IEmailService;
+import com.precious.finance_tracker.services.interfaces.IUserService;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +29,13 @@ import java.time.LocalDateTime;
 @Service
 @Data
 @Transactional
-public class AuthService {
+public class AuthService implements IAuthService {
     private static Logger log = LoggerFactory.getLogger(AuthService.class.getName());
 
-    private final UserService userService;
+    private final IUserService userService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final EmailService emailService;
+    private final IEmailService emailService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -112,8 +113,8 @@ public class AuthService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         user.setOtp(this.emailService.generateOtp());
-        user.setOtpExpiredAt(LocalDateTime.now().plusMinutes(10));
-        user.setIsVerified(false);
+        user.setOtpExpiredAt(LocalDateTime.now().plusMinutes(10));        user.setIsVerified(false);
+
 
         this.userRepository.save(user);
 

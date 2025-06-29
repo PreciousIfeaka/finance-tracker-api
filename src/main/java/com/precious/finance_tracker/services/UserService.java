@@ -11,6 +11,8 @@ import com.precious.finance_tracker.exceptions.BadRequestException;
 import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.exceptions.UnauthorizedException;
 import com.precious.finance_tracker.repositories.UserRepository;
+import com.precious.finance_tracker.services.interfaces.IEmailService;
+import com.precious.finance_tracker.services.interfaces.IUserService;
 import jakarta.persistence.EntityManager;
 import lombok.Data;
 import org.slf4j.Logger;
@@ -28,12 +30,12 @@ import java.util.UUID;
 
 @Service
 @Data
-public class UserService {
+public class UserService implements IUserService {
     private static Logger log = LoggerFactory.getLogger(UserService.class.getName());
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
+    private final IEmailService emailService;
     private final EntityManager entityManager;
 
     @Transactional
@@ -89,6 +91,7 @@ public class UserService {
 
         if (dto.getName() != null) user.setName(dto.getName());
         if (dto.getCurrency() != null) user.setCurrency(dto.getCurrency());
+        if (dto.getAvatarUrl() != null) user.setAvatarUrl(dto.getAvatarUrl());
 
         User savedUser = this.userRepository.save(user);
 

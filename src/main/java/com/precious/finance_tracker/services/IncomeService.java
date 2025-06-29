@@ -12,9 +12,9 @@ import com.precious.finance_tracker.exceptions.ConflictResourceException;
 import com.precious.finance_tracker.exceptions.ForbiddenException;
 import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.IncomeRepository;
-import jakarta.persistence.EntityManager;
+import com.precious.finance_tracker.services.interfaces.IIncomeService;
+import com.precious.finance_tracker.services.interfaces.IUserService;
 import lombok.Data;
-import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -28,16 +28,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Data
-public class IncomeService {
+public class IncomeService implements IIncomeService {
     private static Logger log = LoggerFactory.getLogger(IncomeService.class.getName());
 
     private final IncomeRepository incomeRepository;
-    private final UserService userService;
-    private final EntityManager entityManager;
+    private final IUserService userService;
 
     @Transactional
     public BaseResponseDto<Income> addIncome(AddIncomeRequestDto dto) {
@@ -47,7 +45,6 @@ public class IncomeService {
                 user.getId(), dto.getDateOfReceipt(), dto.getAmount(), dto.getSource()
         );
 
-        System.out.println(dto.getAmount().compareTo(BigDecimal.valueOf(50)));
         if (existingIncome.isPresent()) {
             throw new ConflictResourceException("Similar income entry already exists.");
         } else if (user.getCurrency() == null) {
@@ -78,7 +75,7 @@ public class IncomeService {
     public BaseResponseDto<Income> updateIncome(UUID id, UpdateIncomeRequestDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
-        if (dto.getAmount().compareTo(BigDecimal.valueOf(50)) < 0) {
+        if (dto.getAmount() != null && dto.getAmount().compareTo(BigDecimal.valueOf(50)) < 0) {
             throw new BadRequestException("Minimum amount is " + user.getCurrency() + "50.");
         }
 
