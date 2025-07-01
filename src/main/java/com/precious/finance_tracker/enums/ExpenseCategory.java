@@ -4,5 +4,10 @@ public enum ExpenseCategory {
     food,
     clothing,
     rent,
-    miscellaneous
+    utilities,
+    transportation,
+    healthcare,
+    education,
+    miscellaneous,
+    all
 }

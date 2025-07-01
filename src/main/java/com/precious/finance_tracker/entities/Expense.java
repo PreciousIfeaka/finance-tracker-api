@@ -8,6 +8,7 @@ import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 @SuperBuilder
 @Entity
@@ -16,16 +17,19 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Expense extends AbstractBaseEntity {
+    @Column(nullable = false)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     private ExpenseCategory category;
 
-    private LocalDate dueDate;
-
     private String note;
 
-    private Boolean isRecurring = false;
+    @Column(nullable = false)
+    private Boolean isRecurring;
+
+    @Column(nullable = false)
+    private YearMonth month;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

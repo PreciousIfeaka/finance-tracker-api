@@ -8,6 +8,7 @@ import com.precious.finance_tracker.dtos.expense.UpdateExpenseRequestDto;
 import com.precious.finance_tracker.entities.Expense;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +20,7 @@ public interface IExpenseService {
     BaseResponseDto<Expense> getExpenseById(UUID id);
 
     BaseResponseDto<PagedExpenseResponseDto> getAllExpensesByMonth(
-            int page, int limit, LocalDate date
+            int page, int limit, YearMonth month
     );
 
     BaseResponseDto<PagedExpenseResponseDto> getAllExpenses(int page, int limit);

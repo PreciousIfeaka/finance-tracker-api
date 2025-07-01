@@ -25,7 +25,7 @@ public class UserResponseDto {
 
     private final Roles role;
 
-    private final String avatar_url;
+    private final String avatarUrl;
 
     @JsonIgnore
     private final String otp;
@@ -40,7 +40,7 @@ public class UserResponseDto {
                 .name(user.getName())
                 .email(user.getEmail())
                 .isVerified(user.getIsVerified())
-                .avatar_url(user.getAvatarUrl())
+                .avatarUrl(user.getAvatarUrl())
                 .role((user.getRole()))
                 .currency(user.getCurrency())
                 .createdAt(user.getCreatedAt())

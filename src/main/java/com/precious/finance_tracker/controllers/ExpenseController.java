@@ -9,6 +9,7 @@ import com.precious.finance_tracker.entities.Expense;
 import com.precious.finance_tracker.services.ExpenseService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,7 +31,7 @@ public class ExpenseController {
 
     @PostMapping()
     public ResponseEntity<BaseResponseDto<Expense>> addExpense(
-            @RequestBody AddExpenseRequestDto dto
+            @Valid @RequestBody AddExpenseRequestDto dto
     ) {
         return ResponseEntity.
                 status(HttpStatus.CREATED)
@@ -39,7 +41,7 @@ public class ExpenseController {
     @PutMapping("/{id}")
     public ResponseEntity<BaseResponseDto<Expense>> updateExpense(
             @PathVariable("id") UUID id,
-            @RequestBody UpdateExpenseRequestDto dto
+            @Valid @RequestBody UpdateExpenseRequestDto dto
     ) {
         return ResponseEntity
                 .ok(this.expenseService.updateExpense(id, dto));
@@ -56,13 +58,13 @@ public class ExpenseController {
     public ResponseEntity<BaseResponseDto<PagedExpenseResponseDto>> getAllExpensesByMonth(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit,
-            @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
-    ) {
-        LocalDate defaultDate = LocalDate.now();
+            @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM")YearMonth month
+            ) {
+        YearMonth defaultMonth = YearMonth.now();
 
         return ResponseEntity.ok(
                 this.expenseService.getAllExpensesByMonth(
-                        page, limit, date != null ? date : defaultDate
+                        page, limit, month != null ? month : defaultMonth
                 )
         );
     }

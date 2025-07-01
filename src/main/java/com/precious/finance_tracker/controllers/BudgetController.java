@@ -1,15 +1,11 @@
 package com.precious.finance_tracker.controllers;
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
-import com.precious.finance_tracker.dtos.income.AddIncomeRequestDto;
-import com.precious.finance_tracker.dtos.income.MonthlyIncomeStatsResponseDto;
-import com.precious.finance_tracker.dtos.income.PagedIncomeResponseDto;
-import com.precious.finance_tracker.dtos.income.UpdateIncomeRequestDto;
-import com.precious.finance_tracker.entities.Income;
-import com.precious.finance_tracker.services.IncomeService;
+import com.precious.finance_tracker.dtos.budget.*;
+import com.precious.finance_tracker.entities.Budget;
+import com.precious.finance_tracker.services.interfaces.IBudgetService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -22,40 +18,40 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/incomes")
+@RequestMapping("/api/v1/budgets")
 @Data
-@Tag(name = "Incomes")
+@Tag(name = "Budgets")
 @SecurityRequirement(name = "bearerAuth")
-public class IncomeController {
-    private final IncomeService incomeService;
+public class BudgetController {
+    private final IBudgetService budgetService;
 
     @PostMapping()
-    public ResponseEntity<BaseResponseDto<Income>> addIncome(
-            @Valid @RequestBody AddIncomeRequestDto dto
+    public ResponseEntity<BaseResponseDto<Budget>> addBudget(
+            @RequestBody CreateBudgetRequestDto dto
     ) {
         return ResponseEntity.
                 status(HttpStatus.CREATED)
-                .body(this.incomeService.addIncome(dto));
+                .body(this.budgetService.createBudget(dto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Income>> updateIncome(
+    public ResponseEntity<BaseResponseDto<Budget>> updateBudget(
             @PathVariable("id") UUID id,
-            @Valid @RequestBody UpdateIncomeRequestDto dto
-    ) {
+            @RequestBody UpdateBudgetRequestDto dto
+            ) {
         return ResponseEntity
-                .ok(this.incomeService.updateIncome(id, dto));
+                .ok(this.budgetService.updateBudget(id, dto));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Income>> getIncome(
+    public ResponseEntity<BaseResponseDto<Budget>> getBudget(
             @PathVariable("id") UUID id
     ) {
-        return ResponseEntity.ok(this.incomeService.getIncomeById(id));
+        return ResponseEntity.ok(this.budgetService.getBudget(id));
     }
 
     @GetMapping("/month")
-    public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomesByMonth(
+    public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgetsByMonth(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit,
             @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
@@ -63,34 +59,34 @@ public class IncomeController {
         YearMonth defaultMonth = YearMonth.now();
 
         return ResponseEntity.ok(
-                this.incomeService.getAllIncomesByMonth(
+                this.budgetService.getAllBudgetsByMonth(
                         page, limit, month != null ? month : defaultMonth
                 )
         );
     }
 
     @GetMapping()
-    public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomes(
+    public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgets(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit
     ) {
 
         return ResponseEntity.ok(
-                this.incomeService.getAllIncomes(page, limit)
+                this.budgetService.getAllBudgets(page, limit)
         );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Object>> deleteIncome(
+    public ResponseEntity<BaseResponseDto<Object>> deleteBudget(
             @PathVariable("id") UUID id
     ) {
-        return ResponseEntity.ok(this.incomeService.deleteIncomeById(id));
+        return ResponseEntity.ok(this.budgetService.deleteBudgetById(id));
     }
 
     @GetMapping("/monthly-totals")
-    public ResponseEntity<BaseResponseDto<List<MonthlyIncomeStatsResponseDto>>> getMonthlyTotals() {
+    public ResponseEntity<BaseResponseDto<List<MonthlyBudgetStatsResponseDto>>> getMonthlyTotals() {
         return ResponseEntity.ok(
-                this.incomeService.getMonthlyIncomeStats()
+                this.budgetService.getMonthlyBudgetStats()
         );
     }
 }

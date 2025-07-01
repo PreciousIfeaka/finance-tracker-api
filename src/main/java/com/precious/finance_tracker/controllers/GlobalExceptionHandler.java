@@ -136,7 +136,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponseDto> handleGeneric(Exception e) {
-        log.error("GenericException: {}", e.getMessage());
+        log.error("GenericException: {}", (Object) e.getStackTrace());
 
         String message = e.getMessage().split("\\R", 2)[0];
 

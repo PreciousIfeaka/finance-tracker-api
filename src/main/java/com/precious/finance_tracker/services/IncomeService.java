@@ -23,11 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.Year;
+import java.time.YearMonth;
+import java.util.*;
 
 @Service
 @Data
@@ -42,25 +41,24 @@ public class IncomeService implements IIncomeService {
         User user = this.userService.getAuthenticatedUser();
 
         Optional<Income> existingIncome = this.incomeRepository.findRecurringIncome(
-                user.getId(), dto.getDateOfReceipt(), dto.getAmount(), dto.getSource()
+                user.getId(), dto.getAmount(), dto.getSource()
         );
 
-        if (existingIncome.isPresent()) {
-            throw new ConflictResourceException("Similar income entry already exists.");
-        } else if (user.getCurrency() == null) {
+         if (user.getCurrency() == null) {
             throw new BadRequestException("Currency has not been set in user profile");
-        } else if (dto.getAmount().compareTo(BigDecimal.valueOf(50)) < 0) {
-            throw new BadRequestException("Minimum amount is " + user.getCurrency() + "50.");
-        } else if (dto.getDateOfReceipt().isAfter(LocalDate.now())) {
-            throw new BadRequestException("Date of receipt cannot be in the future");
+        } else if (
+                existingIncome.isPresent() &&
+                        LocalDateTime.now().getMinute() - existingIncome.get().getCreatedAt().getMinute() < 2
+        ) {
+            throw new ConflictResourceException("Duplicate income entry, try again after 2 mins.");
         }
 
         Income income = Income.builder()
                 .amount(dto.getAmount())
-                .type(dto.getType())
                 .note(dto.getNote())
                 .source(dto.getSource())
-                .date(dto.getDateOfReceipt())
+                .month(YearMonth.now())
+                .isRecurring(dto.getIsRecurring())
                 .user(user)
                 .build();
 
@@ -75,10 +73,6 @@ public class IncomeService implements IIncomeService {
     public BaseResponseDto<Income> updateIncome(UUID id, UpdateIncomeRequestDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
-        if (dto.getAmount() != null && dto.getAmount().compareTo(BigDecimal.valueOf(50)) < 0) {
-            throw new BadRequestException("Minimum amount is " + user.getCurrency() + "50.");
-        }
-
         Income income = this.incomeRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new NotFoundException("Income with given ID not found"));
 
@@ -89,7 +83,7 @@ public class IncomeService implements IIncomeService {
         if (dto.getAmount() != null) income.setAmount(dto.getAmount());
         if (dto.getNote() != null) income.setNote(dto.getNote());
         if (dto.getSource() != null) income.setSource(dto.getSource());
-        if (dto.getType() != null) income.setType(dto.getType());
+        if (dto.getIsRecurring() != income.getIsRecurring()) income.setIsRecurring(dto.getIsRecurring());
 
         return BaseResponseDto.<Income>builder()
                 .message("Successfully updated income data")
@@ -116,18 +110,18 @@ public class IncomeService implements IIncomeService {
     }
 
     public BaseResponseDto<PagedIncomeResponseDto> getAllIncomesByMonth(
-            int page, int limit, LocalDate date
+            int page, int limit, YearMonth month
     ) {
         User user = this.userService.getAuthenticatedUser();
 
         Page<Income> incomes = this.incomeRepository.findByUserAndDate(
-                user.getId(), date.getYear(), date.getMonthValue(), PageRequest.of(page, limit)
+                user.getId(), month, PageRequest.of(page, limit)
         );
 
         return BaseResponseDto.<PagedIncomeResponseDto>builder()
                 .status("Success")
-                .message("Successfully retrieved incomes")
-                .data(new PagedIncomeResponseDto(incomes))
+                .message("Successfully retrieved incomes for " + month)
+                .data(new PagedIncomeResponseDto(incomes, this.getTotalIncomeByMonth(month)))
                 .build();
     }
 
@@ -137,10 +131,12 @@ public class IncomeService implements IIncomeService {
         Page<Income> incomes = this.incomeRepository
                 .findByUserIdAndDeletedAtIsNull(user.getId(), PageRequest.of(page, limit));
 
+        BigDecimal totalIncome = this.incomeRepository.sumIncome(user.getId());
+
         return BaseResponseDto.<PagedIncomeResponseDto>builder()
                 .status("Success")
                 .message("Successfully retrieved all incomes")
-                .data(new PagedIncomeResponseDto(incomes))
+                .data(new PagedIncomeResponseDto(incomes, totalIncome))
                 .build();
     }
 
@@ -166,8 +162,8 @@ public class IncomeService implements IIncomeService {
 
         List<MonthlyIncomeStatsResponseDto> stats = results.stream()
                 .map(row -> new MonthlyIncomeStatsResponseDto(
-                        (String) row[0],               // month in "YYYY-MM"
-                        (BigDecimal) row[1]            // total amount
+                        (YearMonth) row[0],
+                        (BigDecimal) row[1]
                 ))
                 .toList();
 
@@ -177,5 +173,13 @@ public class IncomeService implements IIncomeService {
                 .data(stats)
                 .build();
 
+    }
+
+    private BigDecimal getTotalIncomeByMonth(YearMonth month) {
+        User user = this.userService.getAuthenticatedUser();
+
+        return this.incomeRepository.getTotalIncomeByMonth(
+                user.getId(), month
+                );
     }
 }

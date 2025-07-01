@@ -1,8 +1,7 @@
 package com.precious.finance_tracker.dtos.income;
 
-import lombok.Data;
-
 import java.math.BigDecimal;
+import java.time.YearMonth;
 
-public record MonthlyIncomeStatsResponseDto(String month, BigDecimal total) {
+public record MonthlyIncomeStatsResponseDto(YearMonth month, BigDecimal total) {
 }
