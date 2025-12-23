@@ -56,7 +56,7 @@ public class IncomeController {
 
     @GetMapping("/month")
     public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomesByMonth(
-            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit,
             @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
             ) {
@@ -71,7 +71,7 @@ public class IncomeController {
 
     @GetMapping()
     public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomes(
-            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit
     ) {
 

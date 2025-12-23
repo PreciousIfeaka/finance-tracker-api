@@ -52,7 +52,7 @@ public class BudgetController {
 
     @GetMapping("/month")
     public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgetsByMonth(
-            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit,
             @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
             ) {
@@ -67,7 +67,7 @@ public class BudgetController {
 
     @GetMapping()
     public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgets(
-            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit
     ) {
 

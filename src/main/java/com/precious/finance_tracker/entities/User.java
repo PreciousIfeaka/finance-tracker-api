@@ -15,7 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 
-@Entity(name = "_user")
+@Entity(name = "users")
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor

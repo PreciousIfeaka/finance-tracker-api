@@ -21,7 +21,7 @@ import java.util.UUID;
 abstract class AbstractBaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    UUID id;
+    private UUID id;
 
     @CreatedDate
     @Column(updatable = false)

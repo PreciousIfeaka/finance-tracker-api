@@ -150,7 +150,7 @@ public class ExpenseService implements IExpenseService {
         User user = this.userService.getAuthenticatedUser();
 
         Page<Expense> expenses = this.expenseRepository.findByUserAndDate(
-                user.getId(), month, PageRequest.of(page, limit)
+                user.getId(), month, PageRequest.of(page - 1, limit)
         );
 
         return BaseResponseDto.<PagedExpenseResponseDto>builder()
@@ -164,7 +164,7 @@ public class ExpenseService implements IExpenseService {
         User user = this.userService.getAuthenticatedUser();
 
         Page<Expense> expenses = this.expenseRepository
-                .findByUserIdAndDeletedAtIsNull(user.getId(), PageRequest.of(page, limit));
+                .findByUserIdAndDeletedAtIsNull(user.getId(), PageRequest.of(page - 1, limit));
 
         BigDecimal totalExpenses = this.expenseRepository.sumExpense(user.getId());
 

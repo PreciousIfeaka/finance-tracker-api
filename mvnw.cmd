@@ -145,5 +145,5 @@ try {
   try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
   catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
 }
-
+8120810240
 Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"

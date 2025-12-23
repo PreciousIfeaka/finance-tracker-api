@@ -56,7 +56,7 @@ public class ExpenseController {
 
     @GetMapping("/month")
     public ResponseEntity<BaseResponseDto<PagedExpenseResponseDto>> getAllExpensesByMonth(
-            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit,
             @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM")YearMonth month
             ) {
@@ -71,7 +71,7 @@ public class ExpenseController {
 
     @GetMapping()
     public ResponseEntity<BaseResponseDto<PagedExpenseResponseDto>> getAllExpenses(
-            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer limit
     ) {
 

@@ -114,7 +114,7 @@ public class IncomeService implements IIncomeService {
         User user = this.userService.getAuthenticatedUser();
 
         Page<Income> incomes = this.incomeRepository.findByUserAndDate(
-                user.getId(), month, PageRequest.of(page, limit)
+                user.getId(), month, PageRequest.of(page - 1 , limit)
         );
 
         return BaseResponseDto.<PagedIncomeResponseDto>builder()
@@ -128,7 +128,7 @@ public class IncomeService implements IIncomeService {
         User user = this.userService.getAuthenticatedUser();
 
         Page<Income> incomes = this.incomeRepository
-                .findByUserIdAndDeletedAtIsNull(user.getId(), PageRequest.of(page, limit));
+                .findByUserIdAndDeletedAtIsNull(user.getId(), PageRequest.of(page - 1, limit));
 
         BigDecimal totalIncome = this.incomeRepository.sumIncome(user.getId());
 

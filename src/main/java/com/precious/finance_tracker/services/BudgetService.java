@@ -137,7 +137,7 @@ public class BudgetService implements IBudgetService {
 
         Page<Budget> budgets =
                 this.budgetRepository.findAllByUserIdAndDeletedAtIsNull(
-                        user.getId(), PageRequest.of(page, limit)
+                        user.getId(), PageRequest.of(page - 1, limit)
                 );
 
         BigDecimal totalBudget = this.budgetRepository.sumBudget(user.getId());
@@ -197,7 +197,7 @@ public class BudgetService implements IBudgetService {
         User user = this.userService.getAuthenticatedUser();
 
         Page<Budget> budgets = this.budgetRepository.findByUserAndDate(
-                user.getId(), month, PageRequest.of(page, limit)
+                user.getId(), month, PageRequest.of(page - 1, limit)
         );
 
         return BaseResponseDto.<PagedBudgetResponseDto>builder()
