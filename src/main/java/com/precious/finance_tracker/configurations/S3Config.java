@@ -26,6 +26,7 @@ public class S3Config {
     @Value("${s3.region}")
     private String s3Region;
 
+
     @Bean
     public S3Client s3Client() {
         AwsBasicCredentials awsCreds = AwsBasicCredentials.create(
