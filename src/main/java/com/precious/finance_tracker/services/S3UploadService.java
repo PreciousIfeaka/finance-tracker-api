@@ -13,32 +13,29 @@ import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
 @Data
 public class S3UploadService implements IS3UploadService {
-    @Value("${s3.public.base-url}")
-    private String s3PublicBaseUrl;
+    @Value("${s3.bucket-name}")
+    private String s3BucketName;
 
     private final S3Client s3Client;
 
     public BaseResponseDto<Object> uploadImageFileToSupaBaseS3(
             MultipartFile file,
-            String bucketName,
             String objectKey
     ) throws IOException {
         PutObjectRequest putRequest = PutObjectRequest.builder()
-                .bucket(bucketName)
+                .bucket(s3BucketName)
                 .key(objectKey)
-                .acl(ObjectCannedACL.PUBLIC_READ)
                 .contentType(file.getContentType())
                 .build();
 
         this.s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
 
-        String fileUrl = s3PublicBaseUrl + "/" + bucketName + "/" + objectKey;
+        String fileUrl = "https://" + s3BucketName + ".s3.amazonaws.com/" + objectKey;
 
         return BaseResponseDto.builder()
                 .status("Success")

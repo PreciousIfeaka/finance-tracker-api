@@ -8,7 +8,6 @@ import java.io.IOException;
 public interface IS3UploadService {
     BaseResponseDto<Object> uploadImageFileToSupaBaseS3(
             MultipartFile file,
-            String bucketName,
             String objectKey
     ) throws IOException;
 }

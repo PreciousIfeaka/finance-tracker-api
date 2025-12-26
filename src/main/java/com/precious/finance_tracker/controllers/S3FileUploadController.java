@@ -28,9 +28,8 @@ public class S3FileUploadController {
     public ResponseEntity<BaseResponseDto<Object>> uploadFileToS3(
             @RequestParam("file") MultipartFile file
             ) throws IOException {
-        String bucket = "Finance tracker";
         String key = "avatar/" + file.getOriginalFilename();
 
-        return ResponseEntity.ok(this.s3UploadService.uploadImageFileToSupaBaseS3(file, bucket, key));
+        return ResponseEntity.ok(this.s3UploadService.uploadImageFileToSupaBaseS3(file, key));
     }
 }

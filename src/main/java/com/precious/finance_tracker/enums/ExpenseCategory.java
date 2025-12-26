@@ -3,11 +3,13 @@ package com.precious.finance_tracker.enums;
 public enum ExpenseCategory {
     food,
     clothing,
-    rent,
+    housing,
+    entertainment,
     utilities,
     transportation,
     healthcare,
     education,
     miscellaneous,
+    personal,
     all
 }

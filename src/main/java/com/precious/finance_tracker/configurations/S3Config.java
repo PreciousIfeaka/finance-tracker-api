@@ -20,9 +20,6 @@ public class S3Config {
     @Value("${s3.secret-access-key}")
     private String s3SecretAccessKey;
 
-    @Value("${s3.endpoint-url}")
-    private String s3EndpointUrl;
-
     @Value("${s3.region}")
     private String s3Region;
 
@@ -36,7 +33,6 @@ public class S3Config {
 
         return S3Client.builder()
                 .region(Region.of(s3Region))
-                .endpointOverride(URI.create(s3EndpointUrl))
                 .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
                 .serviceConfiguration(
                         S3Configuration.builder()

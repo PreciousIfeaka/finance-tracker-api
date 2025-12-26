@@ -139,9 +139,12 @@ public class GlobalExceptionHandler {
         log.error("GenericException: {}", (Object) e.getStackTrace());
 
         String message = e.getMessage().split("\\R", 2)[0];
+        log.error(message);
 
         if (message.contains("duplicate key") && e.getMessage().contains("email")) {
             message = "Email already exists.";
+        } else {
+            message = "Internal Server Error";
         }
 
         ExceptionResponseDto errorResponse = ExceptionResponseDto.builder()
