@@ -5,9 +5,12 @@ import com.precious.finance_tracker.dtos.expense.AddExpenseRequestDto;
 import com.precious.finance_tracker.dtos.expense.MonthlyExpenseStatsResponseDto;
 import com.precious.finance_tracker.dtos.expense.PagedExpenseResponseDto;
 import com.precious.finance_tracker.dtos.expense.UpdateExpenseRequestDto;
+import com.precious.finance_tracker.dtos.transactions.CreateTransactionDto;
 import com.precious.finance_tracker.entities.Budget;
 import com.precious.finance_tracker.entities.Expense;
+import com.precious.finance_tracker.entities.Transactions;
 import com.precious.finance_tracker.entities.User;
+import com.precious.finance_tracker.enums.TransactionDirection;
 import com.precious.finance_tracker.exceptions.BadRequestException;
 import com.precious.finance_tracker.exceptions.ConflictResourceException;
 import com.precious.finance_tracker.exceptions.ForbiddenException;
@@ -35,6 +38,7 @@ public class ExpenseService implements IExpenseService {
     private final ExpenseRepository expenseRepository;
     private final IUserService userService;
     private final BudgetRepository budgetRepository;
+    private final TransactionsService transactionsService;
 
     @Transactional
     public BaseResponseDto<Expense> addExpenseData(AddExpenseRequestDto dto) {
@@ -81,6 +85,14 @@ public class ExpenseService implements IExpenseService {
                 .isRecurring(dto.getIsRecurring())
                 .user(user)
                 .build();
+
+        this.transactionsService.createTransaction(
+                CreateTransactionDto.builder()
+                        .amount(dto.getAmount())
+                        .description(dto.getNote())
+                        .direction(TransactionDirection.debit)
+                        .build()
+        );
 
         return BaseResponseDto.<Expense>builder()
                 .status("Success")
@@ -156,7 +168,7 @@ public class ExpenseService implements IExpenseService {
         return BaseResponseDto.<PagedExpenseResponseDto>builder()
                 .status("Success")
                 .message("Successfully retrieved expenses")
-                .data(new PagedExpenseResponseDto(expenses, this.getTotalExpenseByMonth(month)))
+                .data(new PagedExpenseResponseDto(expenses, this.getTotalExpenseByMonth(user.getId(), month)))
                 .build();
     }
 
@@ -224,11 +236,9 @@ public class ExpenseService implements IExpenseService {
                 .build();
     }
 
-    private BigDecimal getTotalExpenseByMonth(YearMonth month) {
-        User user = this.userService.getAuthenticatedUser();
-
+    public BigDecimal getTotalExpenseByMonth(UUID userId, YearMonth month) {
         return this.expenseRepository.getTotalExpenseByMonth(
-                 user.getId(), month
+                 userId, month
         );
     }
 }

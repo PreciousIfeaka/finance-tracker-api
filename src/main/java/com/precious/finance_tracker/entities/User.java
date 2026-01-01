@@ -63,6 +63,10 @@ public class User extends AbstractBaseEntity implements UserDetails {
     @JsonIgnore
     private List<Budget> budget;
 
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private List<Transactions> transactions;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));

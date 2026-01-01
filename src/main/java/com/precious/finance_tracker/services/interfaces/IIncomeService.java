@@ -7,6 +7,7 @@ import com.precious.finance_tracker.dtos.income.PagedIncomeResponseDto;
 import com.precious.finance_tracker.dtos.income.UpdateIncomeRequestDto;
 import com.precious.finance_tracker.entities.Income;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -28,4 +29,6 @@ public interface IIncomeService {
     BaseResponseDto<Object> deleteIncomeById(UUID id);
 
     BaseResponseDto<List<MonthlyIncomeStatsResponseDto>> getMonthlyIncomeStats();
+
+    BigDecimal getTotalIncomeByMonth(UUID userId, YearMonth month);
 }

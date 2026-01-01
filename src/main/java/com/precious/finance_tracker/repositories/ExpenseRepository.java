@@ -50,7 +50,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
         FROM Expense i
         WHERE i.user.id = :userId
           AND i.deletedAt IS NULL
-          AND i.month = :month
+          AND (:month IS NULL OR i.month = :month)
     """)
     BigDecimal getTotalExpenseByMonth(@Param("userId") UUID userId, @Param("month") YearMonth month);
 

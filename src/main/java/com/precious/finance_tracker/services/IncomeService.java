@@ -5,14 +5,17 @@ import com.precious.finance_tracker.dtos.income.AddIncomeRequestDto;
 import com.precious.finance_tracker.dtos.income.MonthlyIncomeStatsResponseDto;
 import com.precious.finance_tracker.dtos.income.PagedIncomeResponseDto;
 import com.precious.finance_tracker.dtos.income.UpdateIncomeRequestDto;
+import com.precious.finance_tracker.dtos.transactions.CreateTransactionDto;
 import com.precious.finance_tracker.entities.Income;
 import com.precious.finance_tracker.entities.User;
+import com.precious.finance_tracker.enums.TransactionDirection;
 import com.precious.finance_tracker.exceptions.BadRequestException;
 import com.precious.finance_tracker.exceptions.ConflictResourceException;
 import com.precious.finance_tracker.exceptions.ForbiddenException;
 import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.IncomeRepository;
 import com.precious.finance_tracker.services.interfaces.IIncomeService;
+import com.precious.finance_tracker.services.interfaces.ITransactionService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
 import lombok.Data;
 import org.slf4j.Logger;
@@ -34,6 +37,7 @@ public class IncomeService implements IIncomeService {
 
     private final IncomeRepository incomeRepository;
     private final IUserService userService;
+    private final ITransactionService transactionsService;
 
     @Transactional
     public BaseResponseDto<Income> addIncome(AddIncomeRequestDto dto) {
@@ -43,7 +47,7 @@ public class IncomeService implements IIncomeService {
                 user.getId(), dto.getAmount(), dto.getSource()
         );
 
-         if (user.getCurrency() == null) {
+        if (user.getCurrency() == null) {
             throw new BadRequestException("Currency has not been set in user profile");
         } else if (
                 existingIncome.isPresent() &&
@@ -60,6 +64,14 @@ public class IncomeService implements IIncomeService {
                 .isRecurring(dto.getIsRecurring())
                 .user(user)
                 .build();
+
+        this.transactionsService.createTransaction(
+                CreateTransactionDto.builder()
+                        .amount(dto.getAmount())
+                        .description(dto.getNote())
+                        .direction(TransactionDirection.credit)
+                        .build()
+        );
 
         return BaseResponseDto.<Income>builder()
                 .status("Success")
@@ -120,7 +132,7 @@ public class IncomeService implements IIncomeService {
         return BaseResponseDto.<PagedIncomeResponseDto>builder()
                 .status("Success")
                 .message("Successfully retrieved incomes for " + month)
-                .data(new PagedIncomeResponseDto(incomes, this.getTotalIncomeByMonth(month)))
+                .data(new PagedIncomeResponseDto(incomes, this.getTotalIncomeByMonth(user.getId(), month)))
                 .build();
     }
 
@@ -174,11 +186,9 @@ public class IncomeService implements IIncomeService {
 
     }
 
-    private BigDecimal getTotalIncomeByMonth(YearMonth month) {
-        User user = this.userService.getAuthenticatedUser();
-
+    public BigDecimal getTotalIncomeByMonth(UUID userId, YearMonth month) {
         return this.incomeRepository.getTotalIncomeByMonth(
-                user.getId(), month
-                );
+                userId, month
+        );
     }
 }

@@ -7,6 +7,7 @@ import com.precious.finance_tracker.dtos.expense.PagedExpenseResponseDto;
 import com.precious.finance_tracker.dtos.expense.UpdateExpenseRequestDto;
 import com.precious.finance_tracker.entities.Expense;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -28,4 +29,6 @@ public interface IExpenseService {
     BaseResponseDto<Object> deleteExpenseById(UUID id);
 
     BaseResponseDto<List<MonthlyExpenseStatsResponseDto>> getMonthlyExpenseStats();
+
+    BigDecimal getTotalExpenseByMonth(UUID userId, YearMonth month);
 }
