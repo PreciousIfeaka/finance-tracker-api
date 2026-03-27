@@ -54,7 +54,7 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Pull the new image
-            docker compose pull fintrac
+            docker compose pull fintrack_app
             
             # Recreate the container
             docker compose up -d

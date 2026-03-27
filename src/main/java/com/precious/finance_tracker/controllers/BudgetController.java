@@ -6,7 +6,6 @@ import com.precious.finance_tracker.entities.Budget;
 import com.precious.finance_tracker.services.interfaces.IBudgetService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
