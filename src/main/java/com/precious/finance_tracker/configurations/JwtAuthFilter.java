@@ -2,12 +2,10 @@ package com.precious.finance_tracker.configurations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.precious.finance_tracker.entities.User;
-import com.precious.finance_tracker.exceptions.UnauthorizedException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
