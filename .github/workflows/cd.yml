@@ -57,7 +57,7 @@ jobs:
             docker compose pull fintrac
             
             # Recreate the container
-            docker compose up -d fintrac
+            docker compose up -d
             
             # Clean up dangling images to save space
             docker image prune -f
