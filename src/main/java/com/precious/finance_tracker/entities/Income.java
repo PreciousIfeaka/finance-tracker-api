@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 
 
@@ -29,6 +30,8 @@ public class Income extends AbstractBaseEntity {
 
     @Column(nullable = false)
     private YearMonth month;
+
+    private LocalDateTime transactionDateTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

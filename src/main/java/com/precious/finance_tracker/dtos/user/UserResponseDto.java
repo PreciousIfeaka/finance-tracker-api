@@ -30,6 +30,8 @@ public class UserResponseDto {
     @JsonIgnore
     private final String otp;
 
+    private final Boolean isLimitExceeded;
+
     private final LocalDateTime createdAt;
 
     private final LocalDateTime updatedAt;
@@ -43,6 +45,7 @@ public class UserResponseDto {
                 .avatarUrl(user.getAvatarUrl())
                 .role((user.getRole()))
                 .currency(user.getCurrency())
+                .isLimitExceeded(user.getLimitExceeded())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

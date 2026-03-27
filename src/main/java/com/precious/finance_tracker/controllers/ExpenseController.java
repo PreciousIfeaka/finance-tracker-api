@@ -6,11 +6,13 @@ import com.precious.finance_tracker.dtos.expense.MonthlyExpenseStatsResponseDto;
 import com.precious.finance_tracker.dtos.expense.PagedExpenseResponseDto;
 import com.precious.finance_tracker.dtos.expense.UpdateExpenseRequestDto;
 import com.precious.finance_tracker.entities.Expense;
+import com.precious.finance_tracker.enums.ExpenseCategory;
 import com.precious.finance_tracker.services.ExpenseService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +25,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/expenses")
-@Data
+@RequiredArgsConstructor
 @Tag(name = "Expenses")
 @SecurityRequirement(name = "bearerAuth")
 public class ExpenseController {
@@ -56,11 +58,20 @@ public class ExpenseController {
 
     @GetMapping("/month")
     public ResponseEntity<BaseResponseDto<PagedExpenseResponseDto>> getAllExpensesByMonth(
-            @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer limit,
-            @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM")YearMonth month
+            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
+            @RequestParam(value = "category", required = false) ExpenseCategory category
             ) {
         YearMonth defaultMonth = YearMonth.now();
+
+        if (category != null) {
+            return ResponseEntity.ok(
+                    this.expenseService.getAllExpensesByMonthAndCategory(
+                            page, limit, month != null ? month : defaultMonth, category
+                    )
+            );
+        }
 
         return ResponseEntity.ok(
                 this.expenseService.getAllExpensesByMonth(
@@ -71,8 +82,8 @@ public class ExpenseController {
 
     @GetMapping()
     public ResponseEntity<BaseResponseDto<PagedExpenseResponseDto>> getAllExpenses(
-            @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer limit
+            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit
     ) {
 
         return ResponseEntity.ok(

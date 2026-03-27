@@ -7,6 +7,7 @@ import com.precious.finance_tracker.dtos.income.PagedIncomeResponseDto;
 import com.precious.finance_tracker.dtos.income.UpdateIncomeRequestDto;
 import com.precious.finance_tracker.dtos.transactions.CreateTransactionDto;
 import com.precious.finance_tracker.entities.Income;
+import com.precious.finance_tracker.entities.Transactions;
 import com.precious.finance_tracker.entities.User;
 import com.precious.finance_tracker.enums.TransactionDirection;
 import com.precious.finance_tracker.exceptions.BadRequestException;
@@ -14,10 +15,12 @@ import com.precious.finance_tracker.exceptions.ConflictResourceException;
 import com.precious.finance_tracker.exceptions.ForbiddenException;
 import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.IncomeRepository;
+import com.precious.finance_tracker.repositories.TransactionRepository;
 import com.precious.finance_tracker.services.interfaces.IIncomeService;
 import com.precious.finance_tracker.services.interfaces.ITransactionService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -31,44 +34,39 @@ import java.time.YearMonth;
 import java.util.*;
 
 @Service
-@Data
+@RequiredArgsConstructor
 public class IncomeService implements IIncomeService {
-    private static Logger log = LoggerFactory.getLogger(IncomeService.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(IncomeService.class.getName());
 
     private final IncomeRepository incomeRepository;
     private final IUserService userService;
     private final ITransactionService transactionsService;
+    private final TransactionRepository transactionRepository;
 
     @Transactional
     public BaseResponseDto<Income> addIncome(AddIncomeRequestDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
-        Optional<Income> existingIncome = this.incomeRepository.findRecurringIncome(
-                user.getId(), dto.getAmount(), dto.getSource()
-        );
-
-        if (user.getCurrency() == null) {
-            throw new BadRequestException("Currency has not been set in user profile");
-        } else if (
-                existingIncome.isPresent() &&
-                        LocalDateTime.now().getMinute() - existingIncome.get().getCreatedAt().getMinute() < 2
-        ) {
-            throw new ConflictResourceException("Duplicate income entry, try again after 2 mins.");
-        }
-
         Income income = Income.builder()
                 .amount(dto.getAmount())
                 .note(dto.getNote())
                 .source(dto.getSource())
-                .month(YearMonth.now())
+                .transactionDateTime(dto.getTransactionDateTime())
+                .month(
+                        dto.getTransactionDateTime() != null
+                        ? YearMonth.from(dto.getTransactionDateTime())
+                        : YearMonth.now()
+                )
                 .isRecurring(dto.getIsRecurring())
                 .user(user)
                 .build();
 
+        log.info("Successfully added income record for user {}", user.getEmail());
         this.transactionsService.createTransaction(
                 CreateTransactionDto.builder()
                         .amount(dto.getAmount())
                         .description(dto.getNote())
+                        .transactionDateTime(dto.getTransactionDateTime())
                         .direction(TransactionDirection.credit)
                         .build()
         );
@@ -84,18 +82,46 @@ public class IncomeService implements IIncomeService {
     public BaseResponseDto<Income> updateIncome(UUID id, UpdateIncomeRequestDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
-        Income income = this.incomeRepository.findByIdAndDeletedAtIsNull(id)
+        Income income = this.incomeRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Income with given ID not found"));
 
-        if (!user.getIncomes().contains(income)) {
-            throw new ForbiddenException("Forbidden access to specified income");
-        }
 
         if (dto.getAmount() != null) income.setAmount(dto.getAmount());
         if (dto.getNote() != null) income.setNote(dto.getNote());
         if (dto.getSource() != null) income.setSource(dto.getSource());
         if (dto.getIsRecurring() != income.getIsRecurring()) income.setIsRecurring(dto.getIsRecurring());
+        if (dto.getTransactionDateTime() != null) {
+            income.setMonth(YearMonth.from(dto.getTransactionDateTime()));
+            income.setTransactionDateTime(dto.getTransactionDateTime());
+        }
 
+        Optional<Transactions> transaction = this.transactionRepository
+                .findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDeletedAtIsNull(
+                        user.getId(),
+                        income.getAmount(),
+                        TransactionDirection.credit,
+                        income.getTransactionDateTime()
+                );
+
+        if (transaction.isPresent()) {
+            Transactions t = transaction.get();
+            t.setAmount(dto.getAmount() != null ? dto.getAmount() : t.getAmount());
+            t.setMonth(
+                    dto.getTransactionDateTime() != null
+                            ? YearMonth.from(dto.getTransactionDateTime())
+                            : t.getMonth()
+            );
+            t.setTransactionDateTime(
+                    dto.getTransactionDateTime() != null
+                            ? dto.getTransactionDateTime()
+                            : t.getTransactionDateTime()
+            );
+            t.setDescription(dto.getNote() != null ? dto.getNote() : t.getDescription());
+
+            this.transactionRepository.save(t);
+        }
+
+        log.info("Successfully updated income record for user {}", user.getEmail());
         return BaseResponseDto.<Income>builder()
                 .message("Successfully updated income data")
                 .status("Success")
@@ -106,13 +132,10 @@ public class IncomeService implements IIncomeService {
     public BaseResponseDto<Income> getIncomeById(UUID id) {
         User user = this.userService.getAuthenticatedUser();
 
-        Income income = this.incomeRepository.findByIdAndDeletedAtIsNull(id)
+        Income income = this.incomeRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Income not found"));
 
-        if (!income.getUser().getEmail().equals(user.getEmail())) {
-            throw new ForbiddenException("Forbidden access to this income data");
-        }
-
+        log.info("Successfully retrieved income for user {}", user.getEmail());
         return BaseResponseDto.<Income>builder()
                 .status("Success")
                 .message("Successfully retrieved income")
@@ -129,6 +152,7 @@ public class IncomeService implements IIncomeService {
                 user.getId(), month, PageRequest.of(page - 1 , limit)
         );
 
+        log.info("Successfully retrieved incomes for {} by user {}", month, user.getEmail());
         return BaseResponseDto.<PagedIncomeResponseDto>builder()
                 .status("Success")
                 .message("Successfully retrieved incomes for " + month)
@@ -144,6 +168,7 @@ public class IncomeService implements IIncomeService {
 
         BigDecimal totalIncome = this.incomeRepository.sumIncome(user.getId());
 
+        log.info("Successfully retrieved incomes for user {}", user.getEmail());
         return BaseResponseDto.<PagedIncomeResponseDto>builder()
                 .status("Success")
                 .message("Successfully retrieved all incomes")
@@ -159,10 +184,10 @@ public class IncomeService implements IIncomeService {
 
         this.incomeRepository.save(income);
 
+        log.info("Successfully deleted income with id {}", income.getId());
         return BaseResponseDto.builder()
                 .status("Success")
                 .message("Successfully deleted income with ID " + income.getId())
-                .data(null)
                 .build();
     }
 
@@ -178,6 +203,7 @@ public class IncomeService implements IIncomeService {
                 ))
                 .toList();
 
+        log.info("Successfully retrieved monthly income stats");
         return BaseResponseDto.<List<MonthlyIncomeStatsResponseDto>>builder()
                 .status("Success")
                 .message("Successfully retrieved monthly income stats")

@@ -8,13 +8,14 @@ import com.precious.finance_tracker.services.AuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@Data
+@RequiredArgsConstructor
 @Tag(name = "Auth")
 public class AuthController {
     private final AuthService authService;
@@ -48,7 +49,7 @@ public class AuthController {
 
     @GetMapping("/resend-otp")
     public ResponseEntity<BaseResponseDto<Object>> resendOtp(
-            @RequestParam String email
+            @RequestParam("email") String email
     ) {
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -57,7 +58,7 @@ public class AuthController {
 
     @GetMapping("/forgot-password")
     public  ResponseEntity<BaseResponseDto<Object>> forgotPassword(
-            @RequestParam String email
+            @RequestParam("email") String email
     ) {
         return ResponseEntity
                 .status(HttpStatus.OK)

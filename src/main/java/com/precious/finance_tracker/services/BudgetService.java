@@ -17,6 +17,9 @@ import com.precious.finance_tracker.services.interfaces.IBudgetService;
 import com.precious.finance_tracker.services.interfaces.IIncomeService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -28,8 +31,10 @@ import java.time.YearMonth;
 import java.util.*;
 
 @Service
-@Data
+@RequiredArgsConstructor
 public class BudgetService implements IBudgetService {
+    private static final Logger log = LoggerFactory.getLogger(BudgetService.class.getName());
+
     private final IUserService userService;
     private final IIncomeService incomeService;
     private final IncomeRepository incomeRepository;
@@ -91,17 +96,12 @@ public class BudgetService implements IBudgetService {
             }
         }
 
-        Optional<Expense> expenseForCategory =
-                this.expenseRepository.findByUserAndCategoryAndDate(
+        BigDecimal expenseForCategory =
+                this.expenseRepository.sumExpenseByUserIdAndMonthAndCategory(
                         user.getId(), currentMonth, dto.category()
                 );
 
-        boolean budgetExceeded = false;
-        if (expenseForCategory.isPresent() &&
-                expenseForCategory.get().getAmount().compareTo(dto.amount()) > 0
-        ) {
-            budgetExceeded = true;
-        }
+        boolean budgetExceeded = expenseForCategory.compareTo(dto.amount()) > 0;
 
         Budget budget = Budget.builder()
                 .amount(dto.amount())
@@ -114,6 +114,7 @@ public class BudgetService implements IBudgetService {
 
         Budget savedBudget = this.budgetRepository.save(budget);
 
+        log.info("Successfully created budget for user {}", user.getEmail());
         return BaseResponseDto.<Budget>builder()
                 .status("Success")
                 .message("Successfully created a budget")
@@ -122,9 +123,12 @@ public class BudgetService implements IBudgetService {
     }
 
     public BaseResponseDto<Budget> getBudget(UUID id) {
-        Budget budget = this.budgetRepository.findByIdAndDeletedAtIsNull(id)
+        User user = this.userService.getAuthenticatedUser();
+
+        Budget budget = this.budgetRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Budget not found"));
 
+        log.info("Successfully retrieved budget for user {}", user.getEmail());
         return BaseResponseDto.<Budget>builder()
                 .status("Success")
                 .message("Successfully retrieved budget")
@@ -141,6 +145,8 @@ public class BudgetService implements IBudgetService {
                 );
 
         BigDecimal totalBudget = this.budgetRepository.sumBudget(user.getId());
+
+        log.info("Successfully retrieved budgets for user {}", user.getEmail());
         return BaseResponseDto.<PagedBudgetResponseDto>builder()
                 .status("Success")
                 .message("Successfully retrieved all budgets")
@@ -150,6 +156,8 @@ public class BudgetService implements IBudgetService {
 
     @Transactional
     public BaseResponseDto<Budget> updateBudget(UUID id, UpdateBudgetRequestDto dto) {
+        User user = this.userService.getAuthenticatedUser();
+
         Budget budget = this.getBudget(id).getData();
 
         BigDecimal totalMonthIncome =
@@ -167,8 +175,8 @@ public class BudgetService implements IBudgetService {
             throw new BadRequestException("Budget cannot be more than income per month");
         }
 
-        Optional<Expense> expenseForCategory =
-                this.expenseRepository.findByUserAndCategoryAndDate(
+        BigDecimal expenseForCategory =
+                this.expenseRepository.sumExpenseByUserIdAndMonthAndCategory(
                         budget.getUser().getId(), budget.getMonth(), budget.getCategory()
                 );
 
@@ -176,14 +184,13 @@ public class BudgetService implements IBudgetService {
         if (dto.category() != null) budget.setCategory(dto.category());
         if (dto.isRecurring() != budget.getIsRecurring()) budget.setIsRecurring(dto.isRecurring());
 
-        if (expenseForCategory.isPresent() &&
-                expenseForCategory.get().getAmount().compareTo(budget.getAmount()) > 0
-        ) {
+        if (expenseForCategory.compareTo(budget.getAmount()) > 0) {
             budget.setIsExceeded(true);
         }
 
         this.budgetRepository.save(budget);
 
+        log.info("Successfully updated budget for user {}", user.getEmail());
         return BaseResponseDto.<Budget>builder()
                 .status("Success")
                 .message("Successfully updated budget")
@@ -200,6 +207,7 @@ public class BudgetService implements IBudgetService {
                 user.getId(), month, PageRequest.of(page - 1, limit)
         );
 
+        log.info("Successfully retrieved {} budgets for user {}", month, user.getEmail());
         return BaseResponseDto.<PagedBudgetResponseDto>builder()
                 .status("Success")
                 .message("Successfully retrieved budgets for " + month)
@@ -211,13 +219,12 @@ public class BudgetService implements IBudgetService {
     public BaseResponseDto<Object> deleteBudgetById(UUID id) {
         Budget budget = this.getBudget(id).getData();
 
-        budget.setDeletedAt(LocalDateTime.now());
+        this.budgetRepository.deleteById(budget.getId());
 
-        this.budgetRepository.save(budget);
-
+        log.info("Successfully deleted budget with id {}", budget.getId());
         return BaseResponseDto.builder()
                 .status("Success")
-                .message("Successfully deleted budget with ID " + budget.getId())
+                .message("Successfully deleted budget")
                 .data(null)
                 .build();
     }
@@ -234,6 +241,7 @@ public class BudgetService implements IBudgetService {
                 ))
                 .toList();
 
+        log.info("Successfully retrieved monthly budget stats for user {}", user.getEmail());
         return BaseResponseDto.<List<MonthlyBudgetStatsResponseDto>>builder()
                 .status("Success")
                 .message("Successfully retrieved monthly budget stats")

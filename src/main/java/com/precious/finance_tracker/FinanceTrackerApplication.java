@@ -7,7 +7,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
 @EnableJpaAuditing
-@EnableAsync
 public class FinanceTrackerApplication {
 
 	public static void main(String[] args) {

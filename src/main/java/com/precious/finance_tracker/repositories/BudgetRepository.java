@@ -17,6 +17,8 @@ import java.util.UUID;
 public interface BudgetRepository extends JpaRepository<Budget, UUID> {
     Optional<Budget> findByIdAndDeletedAtIsNull(UUID uuid);
 
+    Optional<Budget> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
+
     Page<Budget> findAllByUserIdAndDeletedAtIsNull(UUID userId, Pageable pageable);
 
     @Query("""

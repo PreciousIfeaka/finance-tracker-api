@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
@@ -90,5 +91,11 @@ public interface TransactionRepository extends JpaRepository<Transactions, UUID>
             @Param("userId") UUID userId,
             @Param("direction") TransactionDirection direction,
             @Param("amount") BigDecimal amount
+    );
+
+    Optional<Transactions> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
+
+    Optional<Transactions> findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDeletedAtIsNull(
+            UUID userId, BigDecimal amount, TransactionDirection direction, LocalDateTime transactionDateTime
     );
 }

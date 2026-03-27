@@ -82,4 +82,6 @@ public interface IncomeRepository extends JpaRepository<Income, UUID> {
     BigDecimal getTotalIncomeByMonth(@Param("userId") UUID userId, @Param("month") YearMonth month);
 
     Optional<Income> findByIdAndDeletedAtIsNull(UUID id);
+
+    Optional<Income> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
 }

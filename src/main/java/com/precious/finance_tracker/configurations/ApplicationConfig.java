@@ -1,8 +1,9 @@
 package com.precious.finance_tracker.configurations;
 
 import com.precious.finance_tracker.exceptions.NotFoundException;
+import com.precious.finance_tracker.proxies.GeminiClientProxy;
 import com.precious.finance_tracker.repositories.UserRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,9 +15,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@RequiredArgsConstructor
+@EnableFeignClients(
+        basePackageClasses = GeminiClientProxy.class
+)
 public class ApplicationConfig {
     private final UserRepository userRepository;
+
+    public ApplicationConfig(
+            UserRepository userRepository
+    ) {
+        this.userRepository = userRepository;
+    }
 
     @Bean
     UserDetailsService userDetailsService() {

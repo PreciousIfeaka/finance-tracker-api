@@ -11,6 +11,7 @@ import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.TransactionRepository;
 import com.precious.finance_tracker.services.interfaces.ITransactionService;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Data
+@RequiredArgsConstructor
 public class TransactionsService implements ITransactionService {
     private final TransactionRepository transactionRepository;
     private final UserService userService;
@@ -31,23 +32,15 @@ public class TransactionsService implements ITransactionService {
     public void createTransaction(CreateTransactionDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
-        Optional<Transactions> existingTransaction = this.transactionRepository.findByUserAndAmountAndDirectionAndDeletedAtIsNull(
-                user.getId(), dto.getDirection(), dto.getAmount()
-        );
-
         if (user.getCurrency() == null) {
             throw new BadRequestException("Currency has not been set in user profile");
-        } else if (
-                existingTransaction.isPresent() &&
-                        LocalDateTime.now().getMinute() - existingTransaction.get().getCreatedAt().getMinute() < 2
-        ) {
-            throw new ConflictResourceException("Duplicate transaction entry, try again after 2 mins.");
         }
 
         Transactions transaction = Transactions.builder()
                 .amount(dto.getAmount())
                 .direction(dto.getDirection())
                 .month(YearMonth.now())
+                .transactionDateTime(dto.getTransactionDateTime())
                 .user(user)
                 .description(dto.getDescription())
                 .build();
@@ -58,7 +51,7 @@ public class TransactionsService implements ITransactionService {
     public BaseResponseDto<Transactions> updateTransaction(UUID id, UpdateTransactionDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
-        Transactions transaction = this.transactionRepository.findByIdAndDeletedAtIsNull(id)
+        Transactions transaction = this.transactionRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Transaction record not found"));
 
         if (dto.getAmount() != null) transaction.setAmount(dto.getAmount());
@@ -73,7 +66,9 @@ public class TransactionsService implements ITransactionService {
     }
 
     public BaseResponseDto<Transactions> getTransactionById(UUID id) {
-        Transactions transaction = this.transactionRepository.findByIdAndDeletedAtIsNull(id)
+        User user = this.userService.getAuthenticatedUser();
+
+        Transactions transaction = this.transactionRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Transaction record not found"));
 
         return BaseResponseDto.<Transactions>builder()
@@ -110,7 +105,7 @@ public class TransactionsService implements ITransactionService {
     public BaseResponseDto<List<MonthlyTransactionStatsResponseDto>> getMonthlyTransactionsStats(
             TransactionDirection direction
     ) {
-        User user = this.getUserService().getAuthenticatedUser();
+        User user = this.userService.getAuthenticatedUser();
 
         List<Object[]> results = this.transactionRepository.sumTransactionsByMonth(
                 user.getId(), direction
@@ -133,7 +128,7 @@ public class TransactionsService implements ITransactionService {
     public BaseResponseDto<Object> deleteTransactionById(UUID id) {
         User user = this.userService.getAuthenticatedUser();
 
-        Transactions transaction = this.transactionRepository.findByIdAndDeletedAtIsNull(id)
+        Transactions transaction = this.transactionRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Transaction record not found"));
 
         transaction.setDeletedAt(LocalDateTime.now());
@@ -161,7 +156,6 @@ public class TransactionsService implements ITransactionService {
                     : totals.getCredit();
         }
 
-        System.out.println(sum);
         return sum;
     }
 }

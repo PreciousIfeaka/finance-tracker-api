@@ -20,11 +20,11 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     Page<Expense> findByUserIdAndDeletedAtIsNull(UUID userId, Pageable pageable);
 
     @Query("""
-        SELECT i FROM Expense i
-        WHERE i.user.id = :userId
-            AND i.amount = :amount
-            AND i.category = :category
-            AND i.deletedAt IS NULL
+        SELECT e FROM Expense e
+        WHERE e.user.id = :userId
+            AND e.amount = :amount
+            AND e.category = :category
+            AND e.deletedAt IS NULL
     """)
     Optional<Expense> findRecurringExpense(
             @Param("userId") UUID userId,
@@ -33,11 +33,11 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
             );
 
     @Query("""
-        SELECT i FROM Expense i
-        WHERE i.user.id = :userId
-            AND i.month = month
-            AND i.deletedAt IS NULL
-        ORDER BY i.createdAt DESC
+        SELECT e FROM Expense e
+        WHERE e.user.id = :userId
+            AND e.month = :month
+            AND e.deletedAt IS NULL
+        ORDER BY e.createdAt DESC
     """)
     Page<Expense> findByUserAndDate(
             @Param("userId") UUID userId,
@@ -46,42 +46,59 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     );
 
     @Query("""
-        SELECT COALESCE(SUM(i.amount), 0)
-        FROM Expense i
-        WHERE i.user.id = :userId
-          AND i.deletedAt IS NULL
-          AND (:month IS NULL OR i.month = :month)
+        SELECT COALESCE(SUM(e.amount), 0)
+        FROM Expense e
+        WHERE e.user.id = :userId
+          AND e.deletedAt IS NULL
+          AND (:month IS NULL OR e.month = :month)
     """)
     BigDecimal getTotalExpenseByMonth(@Param("userId") UUID userId, @Param("month") YearMonth month);
 
     @Query(value = """
-        SELECT i.month AS month,
-               COALESCE(SUM(i.amount), 0) AS total
-        FROM Expense i
-        WHERE i.user.id = :userId AND i.deletedAt IS NULL
-        GROUP BY i.month
-        ORDER BY i.month
+        SELECT e.month AS month,
+               COALESCE(SUM(e.amount), 0) AS total
+        FROM Expense e
+        WHERE e.user.id = :userId AND e.deletedAt IS NULL
+        GROUP BY e.month
+        ORDER BY e.month
     """)
     List<Object[]> sumExpenseByMonth(@Param("userId") UUID userId);
 
     @Query(value = """
-        SELECT COALESCE(SUM(i.amount), 0)
-        FROM Expense i
-        WHERE i.user.id = :userId
-            AND i.deletedAt IS NULL
+        SELECT COALESCE(SUM(e.amount), 0)
+        FROM Expense e
+        WHERE e.user.id = :userId
+            AND e.deletedAt IS NULL
     """)
     BigDecimal sumExpense(@Param("userId") UUID userId);
 
     @Query("""
-        SELECT i FROM Expense i
-        WHERE i.user.id = :userId
-            AND i.month = :month
-            AND i.category = :category
-            AND i.deletedAt IS NULL
+        SELECT e FROM Expense e
+        WHERE e.user.id = :userId
+            AND e.month = :month
+            AND e.category = :category
+            AND e.deletedAt IS NULL
     """)
-    Optional<Expense> findByUserAndCategoryAndDate(
+    Page<Expense> findByUserAndCategoryAndDate(
+            @Param("userId") UUID userId,
+            @Param("month") YearMonth month,
+            @Param("category") ExpenseCategory category,
+            Pageable pageable
+    );
+
+    @Query(value = """
+        SELECT COALESCE(SUM(e.amount), 0)
+        FROM Expense e
+        WHERE e.user.id = :userId
+            AND e.month = :month
+            AND e.category = :category
+            AND e.deletedAt IS NULL
+    """)
+    BigDecimal sumExpenseByUserIdAndMonthAndCategory(
             @Param("userId") UUID userId,
             @Param("month") YearMonth month,
             @Param("category") ExpenseCategory category
     );
+
+    Optional<Expense> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
 }

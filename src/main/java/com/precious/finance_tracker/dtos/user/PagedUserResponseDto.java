@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 public class PagedUserResponseDto {
-    private List<UserResponseDto> users;
+    private final List<UserResponseDto> users;
 
     private final int page;
 

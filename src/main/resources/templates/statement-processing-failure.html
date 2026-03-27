@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Processing Failed</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color:#f4f6f8; padding:20px;">
+<table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+        <td align="center">
+            <table width="500" style="background:#ffffff; border-radius:8px; padding:20px;">
+                <tr>
+                    <td align="center">
+                        <h2 style="color:#c62828;">Statement Processing Failed</h2>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <p>Hi <strong th:text="${name}">Name</strong>,</p>
+
+                        <p>We were unable to process your uploaded bank statement.</p>
+
+                        <p><strong>Possible reasons:</strong></p>
+                        <ul>
+                            <li>Unsupported file format</li>
+                            <li>Unreadable or corrupted file</li>
+                            <li>Unexpected document structure</li>
+                        </ul>
+
+                        <p><strong>Error Details:</strong><br/>
+                            <span style="color:#c62828;" th:text="${errorMessage}">errorMessage</span></p>
+
+                        <p>You can reinitiate the documents processing on your dashboard</p>
+
+                        <p style="color:#777;">If the issue persists, please contact support.</p>
+
+                        <p>Best regards,<br/>FinTrack Team</p>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

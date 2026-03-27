@@ -10,17 +10,20 @@ import com.precious.finance_tracker.entities.Budget;
 import com.precious.finance_tracker.entities.Expense;
 import com.precious.finance_tracker.entities.Transactions;
 import com.precious.finance_tracker.entities.User;
+import com.precious.finance_tracker.enums.ExpenseCategory;
 import com.precious.finance_tracker.enums.TransactionDirection;
-import com.precious.finance_tracker.exceptions.BadRequestException;
-import com.precious.finance_tracker.exceptions.ConflictResourceException;
 import com.precious.finance_tracker.exceptions.ForbiddenException;
 import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.BudgetRepository;
 import com.precious.finance_tracker.repositories.ExpenseRepository;
+import com.precious.finance_tracker.repositories.TransactionRepository;
 import com.precious.finance_tracker.repositories.UserRepository;
 import com.precious.finance_tracker.services.interfaces.IExpenseService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -32,35 +35,24 @@ import java.time.YearMonth;
 import java.util.*;
 
 @Service
-@Data
+@RequiredArgsConstructor
 public class ExpenseService implements IExpenseService {
+    private final Logger log = LoggerFactory.getLogger(ExpenseService.class.getName());
+
     private final UserRepository userRepository;
     private final ExpenseRepository expenseRepository;
     private final IUserService userService;
     private final BudgetRepository budgetRepository;
     private final TransactionsService transactionsService;
+    private final TransactionRepository transactionRepository;
 
     @Transactional
     public BaseResponseDto<Expense> addExpenseData(AddExpenseRequestDto dto) {
         User user = this.userService.getAuthenticatedUser();
-        YearMonth currentMonth = YearMonth.now();
 
-        if (user.getCurrency() == null) {
-            throw new BadRequestException("Currency has not been set in user profile");
-        }
-
-        Optional<Expense> existingExpense = this.expenseRepository.findRecurringExpense(
-                user.getId(), dto.getAmount(), dto.getCategory()
-        );
-
-        if (existingExpense.isPresent()) {
-            long minutesSinceLast = Math.abs(
-                    LocalDateTime.now().getMinute() - existingExpense.get().getCreatedAt().getMinute()
-            );
-            if (minutesSinceLast < 2) {
-                throw new ConflictResourceException("Duplicate expense entry, try again in 2 mins");
-            }
-        }
+        YearMonth currentMonth = dto.getTransactionDateTime() != null
+                ? YearMonth.from(dto.getTransactionDateTime())
+                : YearMonth.now();
 
         Optional<Budget> categoryBudget = this.budgetRepository.findByUserAndCategoryAndDate(
                         user.getId(), currentMonth, dto.getCategory()
@@ -82,6 +74,7 @@ public class ExpenseService implements IExpenseService {
                 .note(dto.getNote())
                 .category(dto.getCategory())
                 .month(currentMonth)
+                .transactionDateTime(dto.getTransactionDateTime())
                 .isRecurring(dto.getIsRecurring())
                 .user(user)
                 .build();
@@ -90,10 +83,12 @@ public class ExpenseService implements IExpenseService {
                 CreateTransactionDto.builder()
                         .amount(dto.getAmount())
                         .description(dto.getNote())
+                        .transactionDateTime(dto.getTransactionDateTime())
                         .direction(TransactionDirection.debit)
                         .build()
         );
 
+        log.info("Successfully added expense record for user {}", user.getEmail());
         return BaseResponseDto.<Expense>builder()
                 .status("Success")
                 .message("Successfully added expense" + (budgetWarnMessage.isEmpty() ? "" : ", " + budgetWarnMessage))
@@ -101,6 +96,7 @@ public class ExpenseService implements IExpenseService {
                 .build();
     }
 
+    @Transactional
     public BaseResponseDto<Expense> updateExpense(UUID id, UpdateExpenseRequestDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
@@ -127,13 +123,44 @@ public class ExpenseService implements IExpenseService {
             this.budgetRepository.save(categoryBudget.get());
         }
 
+        Optional<Transactions> transaction = this.transactionRepository
+                .findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDeletedAtIsNull(
+                        user.getId(),
+                        expense.getAmount(),
+                        TransactionDirection.debit,
+                        expense.getTransactionDateTime()
+                );
+
         if (dto.getAmount() != null) expense.setAmount(dto.getAmount());
         if (dto.getNote() != null) expense.setNote(dto.getNote());
         if (dto.getCategory() != null) expense.setCategory(dto.getCategory());
-        if (dto.getIsRecurring() != expense.getIsRecurring()) expense.setIsRecurring(dto.getIsRecurring());
+        if (dto.getIsRecurring() != null) expense.setIsRecurring(dto.getIsRecurring());
+        if (dto.getTransactionDateTime() != null) {
+            expense.setMonth(YearMonth.from(dto.getTransactionDateTime()));
+            expense.setTransactionDateTime(dto.getTransactionDateTime());
+        }
 
+        if (transaction.isPresent()) {
+            Transactions t = transaction.get();
+            t.setAmount(dto.getAmount() != null ? dto.getAmount() : t.getAmount());
+            t.setMonth(
+                    dto.getTransactionDateTime() != null
+                            ? YearMonth.from(dto.getTransactionDateTime())
+                            : t.getMonth()
+            );
+            t.setTransactionDateTime(
+                    dto.getTransactionDateTime() != null
+                            ? dto.getTransactionDateTime()
+                            : t.getTransactionDateTime()
+            );
+            t.setDescription(dto.getNote() != null ? dto.getNote() : t.getDescription());
+
+            this.transactionRepository.save(t);
+        }
+
+        log.info("Successfully updated expense record for user {}", user.getEmail());
         return BaseResponseDto.<Expense>builder()
-                .message("Successfully updated expense data but, " + budgetWarnMessage)
+                .message("Successfully updated expense data. " + budgetWarnMessage)
                 .status("Success")
                 .data(this.expenseRepository.save(expense))
                 .build();
@@ -142,13 +169,10 @@ public class ExpenseService implements IExpenseService {
     public BaseResponseDto<Expense> getExpenseById(UUID id) {
         User user = this.userService.getAuthenticatedUser();
 
-        Expense expense = this.expenseRepository.findByIdAndDeletedAtIsNull(id)
+        Expense expense = this.expenseRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Expense not found"));
 
-        if (!expense.getUser().getEmail().equals(user.getEmail())) {
-            throw new ForbiddenException("Forbidden access to this expense data");
-        }
-
+        log.info("Successfully retrieved expense for user {}", user.getEmail());
         return BaseResponseDto.<Expense>builder()
                 .status("Success")
                 .message("Successfully retrieved expense")
@@ -165,10 +189,36 @@ public class ExpenseService implements IExpenseService {
                 user.getId(), month, PageRequest.of(page - 1, limit)
         );
 
+        log.info("Successfully retrieved {} expenses for user {}", month, user.getEmail());
         return BaseResponseDto.<PagedExpenseResponseDto>builder()
                 .status("Success")
                 .message("Successfully retrieved expenses")
                 .data(new PagedExpenseResponseDto(expenses, this.getTotalExpenseByMonth(user.getId(), month)))
+                .build();
+    }
+
+    public BaseResponseDto<PagedExpenseResponseDto> getAllExpensesByMonthAndCategory(
+            int page, int limit, YearMonth month, ExpenseCategory category
+    ) {
+        User user = this.userService.getAuthenticatedUser();
+
+        Page<Expense> expenses = this.expenseRepository.findByUserAndCategoryAndDate(
+                user.getId(), month, category, PageRequest.of(page - 1, limit)
+        );
+
+        log.info(
+                "Successfully retrieved {} expenses for month {} and user {}",
+                category, month, user.getEmail()
+        );
+        return BaseResponseDto.<PagedExpenseResponseDto>builder()
+                .status("Success")
+                .message("Successfully retrieved expenses")
+                .data(new PagedExpenseResponseDto(
+                        expenses,
+                        this.expenseRepository.sumExpenseByUserIdAndMonthAndCategory(
+                                user.getId(), month, category
+                        ))
+                )
                 .build();
     }
 
@@ -180,6 +230,7 @@ public class ExpenseService implements IExpenseService {
 
         BigDecimal totalExpenses = this.expenseRepository.sumExpense(user.getId());
 
+        log.info("Successfully retrieved expenses for user {}", user.getEmail());
         return BaseResponseDto.<PagedExpenseResponseDto>builder()
                 .status("Success")
                 .message("Successfully retrieved all expenses")
@@ -192,8 +243,6 @@ public class ExpenseService implements IExpenseService {
         User user = this.userService.getAuthenticatedUser();
 
         Expense expense = this.getExpenseById(id).getData();
-
-        expense.setDeletedAt(LocalDateTime.now());
 
         Optional<Budget> categoryBudget =
                 this.budgetRepository.findByUserAndCategoryAndDate(
@@ -208,11 +257,12 @@ public class ExpenseService implements IExpenseService {
             this.budgetRepository.save(categoryBudget.get());
         }
 
-        this.expenseRepository.save(expense);
+        this.expenseRepository.deleteById(expense.getId());
 
+        log.info("Successfully deleted expenses for user {}", user.getEmail());
         return BaseResponseDto.builder()
                 .status("Success")
-                .message("Successfully deleted expense with ID " + expense.getId())
+                .message("Successfully deleted expense")
                 .data(null)
                 .build();
     }
@@ -229,6 +279,7 @@ public class ExpenseService implements IExpenseService {
                 ))
                 .toList();
 
+        log.info("Successfully retrieved monthly expenses stats for user {}", user.getEmail());
         return BaseResponseDto.<List<MonthlyExpenseStatsResponseDto>>builder()
                 .status("Success")
                 .message("Successfully retrieved monthly expense stats")

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @MappedSuperclass
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -14,7 +14,7 @@ import com.precious.finance_tracker.repositories.UserRepository;
 import com.precious.finance_tracker.services.interfaces.IAuthService;
 import com.precious.finance_tracker.services.interfaces.IEmailService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,10 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @Service
-@Data
+@RequiredArgsConstructor
 @Transactional
 public class AuthService implements IAuthService {
-    private static Logger log = LoggerFactory.getLogger(AuthService.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class.getName());
 
     private final IUserService userService;
     private final JwtService jwtService;
@@ -42,6 +42,14 @@ public class AuthService implements IAuthService {
     public BaseResponseDto<UserResponseDto> registerUser(RegisterUserDto dto) {
         User createdUser = this.userService.createUser(dto);
 
+        if (createdUser.getIsVerified()) {
+            return BaseResponseDto.<UserResponseDto>builder()
+                    .status("Success")
+                    .message("This account already exists, proceed to sign in.")
+                    .data(UserResponseDto.fromEntity(createdUser))
+                    .build();
+        }
+
         this.emailService.sendOtpEmailAsync(
                 VerifyEmailDto.builder()
                         .firstName(dto.getFirstName())
@@ -51,9 +59,11 @@ public class AuthService implements IAuthService {
                         .build()
         );
 
+        log.info("Successfully registered user {}", createdUser.getEmail());
+
         return BaseResponseDto.<UserResponseDto>builder()
                 .status("Success")
-                .message("Successfully registered user, check your email for otp")
+                .message("Successful signup. Check your email for otp")
                 .data(UserResponseDto.fromEntity(createdUser))
                 .build();
     }
@@ -76,6 +86,7 @@ public class AuthService implements IAuthService {
 
         String accessToken = this.jwtService.generateToken(user.getEmail());
 
+        log.info("Successful login by user {}", user.getEmail());
         return BaseResponseDto.<AuthResponseDto>builder()
                 .status("Success")
                 .message("Successfully signed in")
@@ -101,6 +112,7 @@ public class AuthService implements IAuthService {
                 .accessToken(this.jwtService.generateToken(user.getEmail()))
                 .build();
 
+        log.info("Successfully verified ot for user {}", user.getEmail());
         return BaseResponseDto.<AuthResponseDto>builder()
                 .status("Success")
                 .message("Successful OTP verification")
@@ -113,8 +125,8 @@ public class AuthService implements IAuthService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         user.setOtp(this.emailService.generateOtp());
-        user.setOtpExpiredAt(LocalDateTime.now().plusMinutes(10));        user.setIsVerified(false);
-
+        user.setOtpExpiredAt(LocalDateTime.now().plusMinutes(10));
+        user.setIsVerified(false);
 
         this.userRepository.save(user);
 
@@ -138,6 +150,7 @@ public class AuthService implements IAuthService {
             );
         }
 
+        log.info("Successfully resent otp to {}", email);
         return BaseResponseDto.builder()
                 .status("Success")
                 .message("OTP has been successfully sent")
@@ -160,6 +173,7 @@ public class AuthService implements IAuthService {
 
         this.userRepository.save(user);
 
+        log.info("Successfully reset password for user {}", user.getEmail());
         return BaseResponseDto.builder()
                 .status("Success")
                 .message("Successfully reset password")

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/incomes")
-@Data
+@RequiredArgsConstructor
 @Tag(name = "Incomes")
 @SecurityRequirement(name = "bearerAuth")
 public class IncomeController {
@@ -56,9 +57,9 @@ public class IncomeController {
 
     @GetMapping("/month")
     public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomesByMonth(
-            @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer limit,
-            @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
+            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
             ) {
         YearMonth defaultMonth = YearMonth.now();
 
@@ -71,8 +72,8 @@ public class IncomeController {
 
     @GetMapping()
     public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomes(
-            @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer limit
+            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(name= "limit", required = false, defaultValue = "10") Integer limit
     ) {
 
         return ResponseEntity.ok(

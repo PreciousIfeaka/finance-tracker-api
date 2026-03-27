@@ -1,17 +1,21 @@
 package com.precious.finance_tracker.dtos.email;
 
 import com.precious.finance_tracker.enums.EmailPurpose;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class VerifyEmailDto {
-    private final String recipientEmail;
+    private String recipientEmail;
 
-    private final String firstName;
+    private String firstName;
 
-    private final String otp;
+    private String otp;
 
-    private final EmailPurpose purpose;
+    private EmailPurpose purpose;
 }

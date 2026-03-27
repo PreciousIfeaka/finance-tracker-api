@@ -6,8 +6,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 public interface IS3UploadService {
-    BaseResponseDto<Object> uploadImageFileToSupaBaseS3(
-            MultipartFile file,
-            String objectKey
-    ) throws IOException;
+    BaseResponseDto<Object> uploadImageFileToS3(
+            MultipartFile file
+    );
+
+    BaseResponseDto<Object> uploadDocumentFileToS3(
+            MultipartFile file
+    );
+
+    void deleteFromS3(String fileUrl);
+
 }

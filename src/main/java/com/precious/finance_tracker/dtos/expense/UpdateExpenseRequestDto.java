@@ -3,21 +3,28 @@ package com.precious.finance_tracker.dtos.expense;
 import com.precious.finance_tracker.enums.ExpenseCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateExpenseRequestDto {
     @Positive
-    private final BigDecimal amount;
+    private BigDecimal amount;
 
-    private final String note;
+    private String note;
 
-    private final ExpenseCategory category;
+    private ExpenseCategory category;
 
     private Boolean isRecurring;
+
+    private LocalDateTime transactionDateTime;
 }

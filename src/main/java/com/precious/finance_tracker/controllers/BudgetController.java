@@ -7,6 +7,7 @@ import com.precious.finance_tracker.services.interfaces.IBudgetService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/budgets")
-@Data
+@RequiredArgsConstructor
 @Tag(name = "Budgets")
 @SecurityRequirement(name = "bearerAuth")
 public class BudgetController {
@@ -52,9 +53,9 @@ public class BudgetController {
 
     @GetMapping("/month")
     public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgetsByMonth(
-            @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer limit,
-            @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
+            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
             ) {
         YearMonth defaultMonth = YearMonth.now();
 
@@ -67,8 +68,8 @@ public class BudgetController {
 
     @GetMapping()
     public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgets(
-            @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer limit
+            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit
     ) {
 
         return ResponseEntity.ok(

@@ -10,6 +10,12 @@ public enum ExpenseCategory {
     healthcare,
     education,
     miscellaneous,
+    bill,
+    shopping,
+    tax,
+    grooming,
+    gifting,
     personal,
-    all
+    all,
+    others
 }

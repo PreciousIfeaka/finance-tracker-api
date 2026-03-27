@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/transactions")
-@Data
+@RequiredArgsConstructor
 @Tag(name = "Transactions")
 @SecurityRequirement(name = "bearerAuth")
 public class TransactionsController {
@@ -46,9 +47,9 @@ public class TransactionsController {
 
     @GetMapping()
     public ResponseEntity<BaseResponseDto<PagedTransactionResponseDto>> getAllTransactionsByMonth(
-            @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer limit,
-            @RequestParam(required = false, value = "date") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
+            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+            @RequestParam(required = false, value = "month") @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
             @RequestParam(required = false, value = "direction") TransactionDirection direction
             ) {
 

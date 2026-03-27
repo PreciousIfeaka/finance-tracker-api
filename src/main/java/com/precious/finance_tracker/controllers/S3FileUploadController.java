@@ -5,6 +5,7 @@ import com.precious.finance_tracker.services.S3UploadService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,23 +14,27 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-
 
 @RestController
 @RequestMapping("/api/v1/uploads")
-@Data
+@RequiredArgsConstructor
 @Tag(name = "Uploads")
 @SecurityRequirement(name = "bearerAuth")
 public class S3FileUploadController {
     private final S3UploadService s3UploadService;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<BaseResponseDto<Object>> uploadFileToS3(
+    @PostMapping(path = "/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<BaseResponseDto<Object>> uploadAvatarToS3(
             @RequestParam("file") MultipartFile file
-            ) throws IOException {
-        String key = "avatar/" + file.getOriginalFilename();
+            ) {
+        return ResponseEntity.ok(this.s3UploadService.uploadImageFileToS3(file));
+    }
 
-        return ResponseEntity.ok(this.s3UploadService.uploadImageFileToSupaBaseS3(file, key));
+    @PostMapping(path = "/docs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<BaseResponseDto<Object>> uploadDocumentToS3(
+            @RequestParam("file") MultipartFile file
+    ) {
+
+        return ResponseEntity.ok(this.s3UploadService.uploadDocumentFileToS3(file));
     }
 }
