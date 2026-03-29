@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.precious.finance_tracker.entities.User;
 import com.precious.finance_tracker.enums.Currency;
 import com.precious.finance_tracker.enums.Roles;
-import lombok.Builder;
-import lombok.Data;
+import com.precious.finance_tracker.services.S3UploadService;
+import com.precious.finance_tracker.services.interfaces.IS3UploadService;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -36,13 +37,17 @@ public class UserResponseDto {
 
     private final LocalDateTime updatedAt;
 
-    public static UserResponseDto fromEntity(User user) {
+    public static UserResponseDto fromEntity(User user, IS3UploadService s3UploadService) {
         return UserResponseDto.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .isVerified(user.getIsVerified())
-                .avatarUrl(user.getAvatarUrl())
+                .avatarUrl(
+                        user.getAvatarUrl() != null
+                                ? s3UploadService.generatePresignedGetUrl(user.getAvatarUrl())
+                                : null
+                )
                 .role((user.getRole()))
                 .currency(user.getCurrency())
                 .isLimitExceeded(user.getLimitExceeded())

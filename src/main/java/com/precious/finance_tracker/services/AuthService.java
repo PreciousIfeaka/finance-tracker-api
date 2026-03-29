@@ -13,6 +13,7 @@ import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.UserRepository;
 import com.precious.finance_tracker.services.interfaces.IAuthService;
 import com.precious.finance_tracker.services.interfaces.IEmailService;
+import com.precious.finance_tracker.services.interfaces.IS3UploadService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ public class AuthService implements IAuthService {
     private final IEmailService emailService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final IS3UploadService s3UploadService;
 
     public BaseResponseDto<UserResponseDto> registerUser(RegisterUserDto dto) {
         User createdUser = this.userService.createUser(dto);
@@ -46,7 +48,7 @@ public class AuthService implements IAuthService {
             return BaseResponseDto.<UserResponseDto>builder()
                     .status("Success")
                     .message("This account already exists, proceed to sign in.")
-                    .data(UserResponseDto.fromEntity(createdUser))
+                    .data(UserResponseDto.fromEntity(createdUser, s3UploadService))
                     .build();
         }
 
@@ -64,7 +66,7 @@ public class AuthService implements IAuthService {
         return BaseResponseDto.<UserResponseDto>builder()
                 .status("Success")
                 .message("Successful signup. Check your email for otp")
-                .data(UserResponseDto.fromEntity(createdUser))
+                .data(UserResponseDto.fromEntity(createdUser, s3UploadService))
                 .build();
     }
 
@@ -108,7 +110,7 @@ public class AuthService implements IAuthService {
         this.userRepository.save(user);
 
         AuthResponseDto authResponse = AuthResponseDto.builder()
-                .user(UserResponseDto.fromEntity(user))
+                .user(UserResponseDto.fromEntity(user, s3UploadService))
                 .accessToken(this.jwtService.generateToken(user.getEmail()))
                 .build();
 

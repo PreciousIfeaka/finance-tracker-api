@@ -8,9 +8,7 @@ import com.precious.finance_tracker.dtos.email.NotifyStatementProcessingResultDt
 import com.precious.finance_tracker.dtos.gemini.GeminiRequest;
 import com.precious.finance_tracker.dtos.gemini.GeminiResponse;
 import com.precious.finance_tracker.dtos.gemini.GeminiTransactionResponseDto;
-import com.precious.finance_tracker.dtos.statement.CreateStatementRequestDto;
-import com.precious.finance_tracker.dtos.statement.PagedBankStatementResponseDto;
-import com.precious.finance_tracker.dtos.statement.UpdateStatementRequestDto;
+import com.precious.finance_tracker.dtos.statement.*;
 import com.precious.finance_tracker.entities.*;
 import com.precious.finance_tracker.enums.EmailPurpose;
 import com.precious.finance_tracker.enums.ExpenseCategory;
@@ -128,7 +126,7 @@ public class BankStatementAnalysis implements IBankStatementService {
 
             for (DocumentUrls doc:docsToDelete) {
                 if (existingDocuments.contains(doc)) {
-                    this.s3UploadService.deleteFromS3(doc.getUrl());
+                    this.s3UploadService.deleteFromS3(doc.getFileKey());
                 }
             }
 
@@ -204,7 +202,7 @@ public class BankStatementAnalysis implements IBankStatementService {
         }
 
         for (DocumentUrls doc:bankStatement.getDocumentUrls()) {
-            this.s3UploadService.deleteFromS3(doc.getUrl());
+            this.s3UploadService.deleteFromS3(doc.getFileKey());
         }
 
         this.bankStatementRepository.deleteById(bankStatementId);
@@ -221,6 +219,10 @@ public class BankStatementAnalysis implements IBankStatementService {
         BankStatement bankStatement = this.bankStatementRepository
                 .findByIdAndUserIdAndDeletedAtIsNull(bankStatementId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Statement not found"));
+
+        if (bankStatement.getDocumentUrls().get(0).getFileKey() == null) {
+            throw new BadRequestException("Statement must contain valid file key for analysis");
+        }
 
         if (
                 bankStatement.getStatus() == StatementAnalysisStatus.IN_PROGRESS
@@ -337,7 +339,9 @@ public class BankStatementAnalysis implements IBankStatementService {
                     GeminiRequest.Part filePart = new GeminiRequest.Part();
 
                     GeminiRequest.FileData fileData = new GeminiRequest.FileData();
-                    fileData.setFileUri(doc.getUrl());
+                    String url = this.s3UploadService.generatePresignedGetUrl(
+                                    doc.getFileKey());
+                    fileData.setFileUri(url);
                     fileData.setMimeType(doc.getMimeType());
 
                     filePart.setFileData(fileData);

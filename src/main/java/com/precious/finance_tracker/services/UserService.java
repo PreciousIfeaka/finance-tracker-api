@@ -18,6 +18,7 @@ import com.precious.finance_tracker.services.interfaces.IUserService;
 import jakarta.persistence.EntityManager;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -34,9 +35,8 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService implements IUserService {
-    private static final Logger log = LoggerFactory.getLogger(UserService.class.getName());
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final IEmailService emailService;
@@ -90,13 +90,15 @@ public class UserService implements IUserService {
             );
         }
 
-        return UserResponseDto.fromEntity(user);
+        return UserResponseDto.fromEntity(user, s3UploadService);
     }
 
     public PagedUserResponseDto getUsers(int page, int limit) {
         Page<User> users = this.userRepository.findByDeletedAtIsNull(PageRequest.of(page, limit));
 
-        return new PagedUserResponseDto(users.map(UserResponseDto::fromEntity));
+        return new PagedUserResponseDto(users.map(user ->
+                UserResponseDto.fromEntity(user, s3UploadService)
+                ));
     }
 
     @Transactional
@@ -118,7 +120,7 @@ public class UserService implements IUserService {
         return BaseResponseDto.<UserResponseDto>builder()
                 .status("Status")
                 .message("Successfully updated user profile")
-                .data(UserResponseDto.fromEntity(savedUser))
+                .data(UserResponseDto.fromEntity(savedUser, s3UploadService))
                 .build();
     }
 

@@ -6,6 +6,7 @@ import com.precious.finance_tracker.dtos.user.PagedUserResponseDto;
 import com.precious.finance_tracker.dtos.user.UpdateUserRequestDto;
 import com.precious.finance_tracker.dtos.user.UserResponseDto;
 import com.precious.finance_tracker.services.UserService;
+import com.precious.finance_tracker.services.interfaces.IS3UploadService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,11 +24,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final IS3UploadService s3UploadService;
 
     @GetMapping("/me")
     public ResponseEntity<BaseResponseDto<UserResponseDto>> getMyProfile() {
         UserResponseDto userResponseDto = UserResponseDto.fromEntity(
-                this.userService.getAuthenticatedUser()
+                this.userService.getAuthenticatedUser(),
+                s3UploadService
         );
 
         return ResponseEntity.ok(

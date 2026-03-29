@@ -12,6 +12,7 @@ import org.jobrunr.jobs.annotations.Job;
 import org.jobrunr.scheduling.JobScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class EmailService implements IEmailService {
+    @Value("${app.mail.from}")
+    private String senderEmail;
+
     private static final Logger log = LoggerFactory.getLogger(EmailService.class.getName());
 
     private final JavaMailSender javaMailSender;
@@ -59,6 +63,7 @@ public class EmailService implements IEmailService {
             helper.setTo(dto.getRecipientEmail());
             helper.setSubject(emailDataMap.get(dto.getPurpose())[0]);
             helper.setText(htmlContent, true);
+            helper.setFrom(senderEmail);
 
             javaMailSender.send(mimeMessage);
 
@@ -95,6 +100,7 @@ public class EmailService implements IEmailService {
             helper.setTo(dto.getRecipientEmail());
             helper.setSubject(emailDataMap.get(dto.getPurpose())[0]);
             helper.setText(htmlContent, true);
+            helper.setFrom(senderEmail);
 
             javaMailSender.send(mimeMessage);
             log.info("Successfully sent {} mail to {}", dto.getPurpose(), dto.getRecipientEmail());

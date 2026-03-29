@@ -8,7 +8,6 @@ import com.precious.finance_tracker.entities.BankStatement;
 import com.precious.finance_tracker.services.interfaces.IBankStatementService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

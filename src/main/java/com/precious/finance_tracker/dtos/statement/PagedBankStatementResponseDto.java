@@ -4,7 +4,6 @@ import com.precious.finance_tracker.entities.BankStatement;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Getter

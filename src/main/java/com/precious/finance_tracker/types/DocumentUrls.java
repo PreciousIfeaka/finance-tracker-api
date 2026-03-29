@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DocumentUrls {
-    private String url;
+    private String fileKey;
 
     private String mimeType;
 }

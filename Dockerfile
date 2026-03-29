@@ -1,20 +1,20 @@
-# ---- Build stage ----
-FROM maven:3.9.0-eclipse-temurin-17 AS build
+# ---- Dependencies stage ----
+FROM maven:3.9.0-eclipse-temurin-17 AS dependencies
 WORKDIR /app
 COPY pom.xml .
+RUN mvn dependency:resolve dependency:resolve-plugins -B
 
-RUN mvn dependency:go-offline -B
-
+# ---- Build stage ----
+FROM dependencies AS build
 COPY src ./src
-
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -B
 
 # ---- Run stage ----
-FROM openjdk:17.0.1-jdk-slim
+FROM eclipse-temurin:17-jre-alpine AS runtime
 WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 
-COPY --from=build ./app/target/finance-tracker-0.0.1-SNAPSHOT.jar ./app.jar
-
-EXPOSE 6005
+EXPOSE 6002
+EXPOSE 6003
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

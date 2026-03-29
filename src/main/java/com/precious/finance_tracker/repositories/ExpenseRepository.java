@@ -46,6 +46,18 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     );
 
     @Query("""
+        SELECT e FROM Expense e
+        WHERE e.user.id = :userId
+            AND e.month = :month
+            AND e.deletedAt IS NULL
+        ORDER BY e.createdAt DESC
+    """)
+    List<Expense> findByUserAndDate(
+            @Param("userId") UUID userId,
+            @Param("month") YearMonth month
+    );
+
+    @Query("""
         SELECT COALESCE(SUM(e.amount), 0)
         FROM Expense e
         WHERE e.user.id = :userId
