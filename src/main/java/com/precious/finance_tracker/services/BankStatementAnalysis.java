@@ -266,8 +266,8 @@ public class BankStatementAnalysis implements IBankStatementService {
                     I have attached a maximum of 3 bank statement files to this prompt that might be \
                     in different document formats (pdf, csv and excel). They are statements for a user over a given month \
                     across the different banks the user uses. Extract all transactions from these statements,
-                    making sure to take note of inter-bank transfers and not consider them. Only consider transactions \
-                    that are going out or coming into the users accounts but not transactions between them.
+                    making sure to take note of personal inter-bank transfers and not consider them. Only consider transactions \
+                    that are going out or coming into the users accounts with similar names but not transactions between them.
                     That means personal transfers should not be recorded.
                     Make sure to return ONLY a raw list of JSON with the following fields for each transaction:
                      - datetime (transaction datetime in yyyy-MM-dd'T'HH:mm:ss format)
@@ -279,13 +279,12 @@ public class BankStatementAnalysis implements IBankStatementService {
                         text of choice obtained from the transaction details. You can generally use 'salary', 'gifting', etc).
                         Try your best possible to determine the category from all details of the transaction,
                         If you cannot determine it, mark it as miscellaneous. For money lent out to someone or given to \
-                        someone, it should be categorized as bill. If money is sent to someone's account and it is refunded,
-                        do not record it since it cancels out.
+                        someone, it should be categorized as bill. If money is sent to someone's account and the person \
+                        refunds same amount, do not record it since it cancels out.
                      - note (this is the transaction description).
                      - direction (enum of 'credit' or 'debit')
                     For the tax or interest category, accumulate all transaction charges, tax or interest and \
                     ONLY return one record indicating the sum. Do this also to anything that seem like bonus on the income.
-                    When there is any description with 'OWealth', do not consider the transaction unless it is an interest.
                     Do NOT include markdowns, backticks or explanations as the response will be parsed with jackson.
                     """;
 
