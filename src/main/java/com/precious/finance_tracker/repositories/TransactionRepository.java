@@ -17,6 +17,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transactions, UUID> {
+    @Query("""
+    SELECT t FROM Transactions t
+    WHERE t.user.id = :userId
+      AND t.deletedAt IS NULL
+      AND (:month IS NULL OR t.month = :month)
+      AND (:direction IS NULL OR t.direction = :direction)
+    ORDER BY t.createdAt DESC
+""")
     Page<Transactions> findByUserIdAndMonthAndDirection(
             @Param("userId") UUID userId,
             @Param("month") YearMonth month,
