@@ -65,7 +65,11 @@ public interface TransactionRepository extends JpaRepository<Transactions, UUID>
 
     Optional<Transactions> findByIdAndUserId(UUID id, UUID userId);
 
-    Optional<Transactions> findByUserIdAndAmountAndDirectionAndTransactionDateTime(
-            UUID userId, BigDecimal amount, TransactionDirection direction, LocalDateTime transactionDateTime
+    Optional<Transactions> findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDescription(
+            UUID userId,
+            BigDecimal amount,
+            TransactionDirection direction,
+            LocalDateTime transactionDateTime,
+            String description
     );
 }

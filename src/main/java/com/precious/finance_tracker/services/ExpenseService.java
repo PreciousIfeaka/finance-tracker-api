@@ -123,11 +123,12 @@ public class ExpenseService implements IExpenseService {
         }
 
         Optional<Transactions> transaction = this.transactionRepository
-                .findByUserIdAndAmountAndDirectionAndTransactionDateTime(
+                .findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDescription(
                         user.getId(),
                         expense.getAmount(),
                         TransactionDirection.debit,
-                        expense.getTransactionDateTime()
+                        expense.getTransactionDateTime(),
+                        expense.getNote()
                 );
 
         if (dto.getAmount() != null) expense.setAmount(dto.getAmount());
