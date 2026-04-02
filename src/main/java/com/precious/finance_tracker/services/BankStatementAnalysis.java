@@ -283,7 +283,7 @@ public class BankStatementAnalysis implements IBankStatementService {
                         refunds same amount, do not record it since it cancels out.
                      - note (this is the transaction description).
                      - direction (enum of 'credit' or 'debit')
-                    For the tax or interest category, accumulate all transaction charges, tax or interest and \
+                    For the tax or interest category, either credit or debit, accumulate all transaction charges, tax or interest and \
                     ONLY return one record indicating the sum. Do this also to anything that seem like bonus on the income.
                     Do NOT include markdowns, backticks or explanations as the response will be parsed with jackson.
                     """;

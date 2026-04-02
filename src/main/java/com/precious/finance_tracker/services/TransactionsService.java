@@ -1,6 +1,7 @@
 package com.precious.finance_tracker.services;
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
+import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.transactions.*;
 import com.precious.finance_tracker.entities.Transactions;
 import com.precious.finance_tracker.entities.User;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -142,6 +144,18 @@ public class TransactionsService implements ITransactionService {
                 .status("Success")
                 .message("Successfully deleted transaction record")
                 .data(null)
+                .build();
+    }
+
+    @Transactional
+    public BaseResponseDto<Object> deleteTransactionsByIds(DeleteByIdsDto dto) {
+        this.transactionRepository.deleteAllById(dto.getIds());
+
+        log.info("Successfully deleted selected transactions");
+
+        return BaseResponseDto.builder()
+                .status("Success")
+                .message("Successfully deleted selected transactions")
                 .build();
     }
 

@@ -1,6 +1,7 @@
 package com.precious.finance_tracker.services.interfaces;
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
+import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.transactions.CreateTransactionDto;
 import com.precious.finance_tracker.dtos.transactions.MonthlyTransactionStatsResponseDto;
 import com.precious.finance_tracker.dtos.transactions.PagedTransactionResponseDto;
@@ -23,6 +24,8 @@ public interface ITransactionService {
             int page, int limit, YearMonth month, TransactionDirection direction
     );
     BaseResponseDto<Object> deleteTransactionById(UUID id);
+
+    BaseResponseDto<Object> deleteTransactionsByIds(DeleteByIdsDto dto);
 
     BaseResponseDto<List<MonthlyTransactionStatsResponseDto>> getMonthlyTransactionsStats(
             TransactionDirection direction

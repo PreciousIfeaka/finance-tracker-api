@@ -1,6 +1,7 @@
 package com.precious.finance_tracker.services;
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
+import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.expense.AddExpenseRequestDto;
 import com.precious.finance_tracker.dtos.expense.MonthlyExpenseStatsResponseDto;
 import com.precious.finance_tracker.dtos.expense.PagedExpenseResponseDto;
@@ -262,6 +263,18 @@ public class ExpenseService implements IExpenseService {
                 .status("Success")
                 .message("Successfully deleted expense")
                 .data(null)
+                .build();
+    }
+
+    @Transactional
+    public BaseResponseDto<Object> deleteExpensesByIds(DeleteByIdsDto dto) {
+        this.expenseRepository.deleteAllById(dto.getIds());
+
+        log.info("Successfully deleted selected expenses");
+
+        return BaseResponseDto.builder()
+                .status("Success")
+                .message("Successfully deleted selected expenses")
                 .build();
     }
 

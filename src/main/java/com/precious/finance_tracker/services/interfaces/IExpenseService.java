@@ -1,6 +1,7 @@
 package com.precious.finance_tracker.services.interfaces;
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
+import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.expense.AddExpenseRequestDto;
 import com.precious.finance_tracker.dtos.expense.MonthlyExpenseStatsResponseDto;
 import com.precious.finance_tracker.dtos.expense.PagedExpenseResponseDto;
@@ -27,6 +28,8 @@ public interface IExpenseService {
     BaseResponseDto<PagedExpenseResponseDto> getAllExpenses(int page, int limit);
 
     BaseResponseDto<Object> deleteExpenseById(UUID id);
+
+    BaseResponseDto<Object> deleteExpensesByIds(DeleteByIdsDto dto);
 
     BaseResponseDto<List<MonthlyExpenseStatsResponseDto>> getMonthlyExpenseStats();
 

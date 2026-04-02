@@ -1,6 +1,7 @@
 package com.precious.finance_tracker.services.interfaces;
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
+import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.income.AddIncomeRequestDto;
 import com.precious.finance_tracker.dtos.income.MonthlyIncomeStatsResponseDto;
 import com.precious.finance_tracker.dtos.income.PagedIncomeResponseDto;
@@ -27,6 +28,8 @@ public interface IIncomeService {
     BaseResponseDto<PagedIncomeResponseDto> getAllIncomes(int page, int limit);
 
     BaseResponseDto<Object> deleteIncomeById(UUID id);
+
+    BaseResponseDto<Object> deleteIncomesByIds(DeleteByIdsDto dto);
 
     BaseResponseDto<List<MonthlyIncomeStatsResponseDto>> getMonthlyIncomeStats();
 

@@ -228,7 +228,18 @@ public class BudgetService implements IBudgetService {
         return BaseResponseDto.builder()
                 .status("Success")
                 .message("Successfully deleted budget")
-                .data(null)
+                .build();
+    }
+
+    @Transactional
+    public BaseResponseDto<Object> deleteBudgetsByIds(DeleteByIdsDto dto) {
+        this.budgetRepository.deleteAllById(dto.getIds());
+
+        log.info("Successfully deleted selected budgets");
+
+        return BaseResponseDto.builder()
+                .status("Success")
+                .message("Successfully deleted budget")
                 .build();
     }
 

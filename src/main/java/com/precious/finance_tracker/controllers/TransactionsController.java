@@ -2,6 +2,7 @@ package com.precious.finance_tracker.controllers;
 
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
+import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.transactions.MonthlyTransactionStatsResponseDto;
 import com.precious.finance_tracker.dtos.transactions.PagedTransactionResponseDto;
 import com.precious.finance_tracker.dtos.transactions.UpdateTransactionDto;
@@ -65,6 +66,13 @@ public class TransactionsController {
             @PathVariable("id") UUID id
     ) {
         return ResponseEntity.ok(this.transactionsService.deleteTransactionById(id));
+    }
+
+    @DeleteMapping("/selected")
+    public ResponseEntity<BaseResponseDto<Object>> deleteTransactionsByIds(
+            @RequestBody DeleteByIdsDto dto
+    ) {
+        return ResponseEntity.ok(this.transactionsService.deleteTransactionsByIds(dto));
     }
 
     @GetMapping("/monthly-totals")

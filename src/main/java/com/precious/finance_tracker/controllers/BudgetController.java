@@ -83,6 +83,13 @@ public class BudgetController {
         return ResponseEntity.ok(this.budgetService.deleteBudgetById(id));
     }
 
+    @DeleteMapping("/selected")
+    public ResponseEntity<BaseResponseDto<Object>> deleteBudgetsByIds(
+            @RequestBody DeleteByIdsDto dto
+    ) {
+        return ResponseEntity.ok(this.budgetService.deleteBudgetsByIds(dto));
+    }
+
     @GetMapping("/monthly-totals")
     public ResponseEntity<BaseResponseDto<List<MonthlyBudgetStatsResponseDto>>> getMonthlyTotals() {
         return ResponseEntity.ok(

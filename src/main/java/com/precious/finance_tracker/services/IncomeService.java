@@ -1,6 +1,7 @@
 package com.precious.finance_tracker.services;
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
+import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.income.AddIncomeRequestDto;
 import com.precious.finance_tracker.dtos.income.MonthlyIncomeStatsResponseDto;
 import com.precious.finance_tracker.dtos.income.PagedIncomeResponseDto;
@@ -186,6 +187,18 @@ public class IncomeService implements IIncomeService {
         return BaseResponseDto.builder()
                 .status("Success")
                 .message("Successfully deleted income with ID " + income.getId())
+                .build();
+    }
+
+    @Transactional
+    public BaseResponseDto<Object> deleteIncomesByIds(DeleteByIdsDto dto) {
+        this.incomeRepository.deleteAllById(dto.getIds());
+
+        log.info("Successfully deleted selected incomes");
+
+        return BaseResponseDto.builder()
+                .status("Success")
+                .message("Successfully deleted selected incomes")
                 .build();
     }
 
