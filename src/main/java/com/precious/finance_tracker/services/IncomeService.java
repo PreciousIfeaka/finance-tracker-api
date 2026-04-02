@@ -97,11 +97,12 @@ public class IncomeService implements IIncomeService {
         }
 
         Optional<Transactions> transaction = this.transactionRepository
-                .findByUserIdAndAmountAndDirectionAndTransactionDateTime(
+                .findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDescription(
                         user.getId(),
                         income.getAmount(),
                         TransactionDirection.credit,
-                        income.getTransactionDateTime()
+                        income.getTransactionDateTime(),
+                        income.getNote()
                 );
 
         if (transaction.isPresent()) {
