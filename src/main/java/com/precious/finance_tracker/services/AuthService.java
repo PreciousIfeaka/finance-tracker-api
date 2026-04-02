@@ -97,7 +97,7 @@ public class AuthService implements IAuthService {
     }
 
     public BaseResponseDto<AuthResponseDto> verifyOtp(VerifyOtpDto dto) {
-        User user = this.userRepository.findByEmailAndDeletedAtIsNull(dto.getEmail())
+        User user = this.userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (!user.getOtp().equals(dto.getOtp()) || user.getOtpExpiredAt().isBefore(LocalDateTime.now())) {
@@ -123,7 +123,7 @@ public class AuthService implements IAuthService {
     }
 
     public BaseResponseDto<Object> resendOtp(String email, EmailPurpose purpose) {
-        User user = this.userRepository.findByEmailAndDeletedAtIsNull(email)
+        User user = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         user.setOtp(this.emailService.generateOtp());
@@ -161,7 +161,7 @@ public class AuthService implements IAuthService {
     }
 
     public BaseResponseDto<Object> resetPassword(ResetPasswordDto dto) {
-        User user = this.userRepository.findByOtpAndDeletedAtIsNull(dto.getOtp())
+        User user = this.userRepository.findByOtp(dto.getOtp())
                 .orElseThrow(() -> new BadRequestException("Invalid OTP"));
 
         if (user.getOtpExpiredAt().isBefore(LocalDateTime.now())) {

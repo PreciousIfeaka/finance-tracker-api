@@ -73,7 +73,7 @@ public class BankStatementAnalysis implements IBankStatementService {
 
         Optional<BankStatement> existingStatement =
                 this.bankStatementRepository
-                        .findByUserIdAndMonthAndDeletedAtIsNull(user.getId(), dto.getMonth());
+                        .findByUserIdAndMonth(user.getId(), dto.getMonth());
 
         if (existingStatement.isPresent()) {
             throw new ConflictResourceException("You already have a bank statement record for " + dto.getMonth());
@@ -100,7 +100,7 @@ public class BankStatementAnalysis implements IBankStatementService {
         User user = this.userService.getAuthenticatedUser();
 
         BankStatement bankStatement =
-                this.bankStatementRepository.findByIdAndUserIdAndDeletedAtIsNull(bankStatementId, user.getId())
+                this.bankStatementRepository.findByIdAndUserId(bankStatementId, user.getId())
                         .orElseThrow(() -> new NotFoundException("Failed to retrieve bank statement"));
 
         if (
@@ -112,7 +112,7 @@ public class BankStatementAnalysis implements IBankStatementService {
 
         if (dto.getMonth() != null) {
             Optional<BankStatement> existingMonthStatement =
-                    this.bankStatementRepository.findByUserIdAndMonthAndDeletedAtIsNull(user.getId(), dto.getMonth());
+                    this.bankStatementRepository.findByUserIdAndMonth(user.getId(), dto.getMonth());
 
             if (existingMonthStatement.isPresent()) {
                 throw new ConflictResourceException("You already have a bank statement record for " + dto.getMonth());
@@ -165,7 +165,7 @@ public class BankStatementAnalysis implements IBankStatementService {
     ) {
         User user = this.userService.getAuthenticatedUser();
 
-        BankStatement bankStatement = this.bankStatementRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
+        BankStatement bankStatement = this.bankStatementRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Failed to retrieve bank statement"));
 
         return BaseResponseDto.<BankStatement>builder()
@@ -181,7 +181,7 @@ public class BankStatementAnalysis implements IBankStatementService {
         User user = this.userService.getAuthenticatedUser();
 
         Page<BankStatement> statements = this.bankStatementRepository
-                .findAllByUserIdAndDeletedAtIsNull(user.getId(), PageRequest.of(page - 1, limit));
+                .findAllByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page - 1, limit));
 
         return BaseResponseDto.<PagedBankStatementResponseDto>builder()
                 .status("Success")
@@ -194,7 +194,7 @@ public class BankStatementAnalysis implements IBankStatementService {
         User user = this.userService.getAuthenticatedUser();
 
         BankStatement bankStatement = this.bankStatementRepository
-                .findByIdAndUserIdAndDeletedAtIsNull(bankStatementId, user.getId())
+                .findByIdAndUserId(bankStatementId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Statement not found"));
 
         if (bankStatement.getStatus() == StatementAnalysisStatus.IN_PROGRESS) {
@@ -217,7 +217,7 @@ public class BankStatementAnalysis implements IBankStatementService {
         User user = this.userService.getAuthenticatedUser();
 
         BankStatement bankStatement = this.bankStatementRepository
-                .findByIdAndUserIdAndDeletedAtIsNull(bankStatementId, user.getId())
+                .findByIdAndUserId(bankStatementId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Statement not found"));
 
         if (bankStatement.getDocumentUrls().get(0).getFileKey() == null) {
@@ -257,7 +257,7 @@ public class BankStatementAnalysis implements IBankStatementService {
                 .orElseThrow(() -> new NotFoundException("Failed to retrieve user details"));
 
         BankStatement bankStatement = this.bankStatementRepository
-                .findByIdAndUserIdAndDeletedAtIsNull(bankStatementId, user.getId())
+                .findByIdAndUserId(bankStatementId, user.getId())
                 .orElseThrow(() -> new NotFoundException("Statement not found"));
 
         try {

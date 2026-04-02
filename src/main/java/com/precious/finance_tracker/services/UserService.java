@@ -44,7 +44,7 @@ public class UserService implements IUserService {
 
     @Transactional
     public User createUser(RegisterUserDto dto) {
-        Optional<User> existingUser = this.userRepository.findByEmailAndDeletedAtIsNull(dto.getEmail());
+        Optional<User> existingUser = this.userRepository.findByEmail(dto.getEmail());
 
         if (existingUser.isPresent()) {
             User user = existingUser.get();
@@ -79,10 +79,10 @@ public class UserService implements IUserService {
         User user;
 
         if (identifier instanceof String email && email.contains("@")) {
-            user = this.userRepository.findByEmailAndDeletedAtIsNull(email)
+            user = this.userRepository.findByEmail(email)
                     .orElseThrow(() -> new NotFoundException("User not found"));
         } else if (identifier instanceof UUID id) {
-            user = this.userRepository.findByIdAndDeletedAtIsNull(id)
+            user = this.userRepository.findById(id)
                     .orElseThrow(() -> new NotFoundException("User not found"));
         } else {
             throw new IllegalArgumentException(
@@ -94,7 +94,7 @@ public class UserService implements IUserService {
     }
 
     public PagedUserResponseDto getUsers(int page, int limit) {
-        Page<User> users = this.userRepository.findByDeletedAtIsNull(PageRequest.of(page, limit));
+        Page<User> users = this.userRepository.findAll(PageRequest.of(page, limit));
 
         return new PagedUserResponseDto(users.map(user ->
                 UserResponseDto.fromEntity(user, s3UploadService)
@@ -150,9 +150,7 @@ public class UserService implements IUserService {
     public BaseResponseDto<Object> deleteUserData() {
         User user = this.getAuthenticatedUser();
 
-        user.setDeletedAt(LocalDateTime.now());
-
-        this.userRepository.save(user);
+        this.userRepository.deleteById(user.getId());
 
         log.info("Successfully deleted user record for {}", user.getEmail());
         return BaseResponseDto.builder()
@@ -168,7 +166,7 @@ public class UserService implements IUserService {
         if (auth != null && auth.isAuthenticated()) {
             String userEmail = auth.getName();
 
-            return this.userRepository.findByEmailAndDeletedAtIsNull(userEmail)
+            return this.userRepository.findByEmail(userEmail)
                             .orElseThrow(() -> new UnauthorizedException("Unauthorized user"));
         }
         return null;

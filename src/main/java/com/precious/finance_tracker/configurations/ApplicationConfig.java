@@ -29,7 +29,7 @@ public class ApplicationConfig {
 
     @Bean
     UserDetailsService userDetailsService() {
-        return email -> this.userRepository.findByEmailAndDeletedAtIsNull(email)
+        return email -> this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 

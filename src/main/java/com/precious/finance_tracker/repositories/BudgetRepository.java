@@ -15,37 +15,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface BudgetRepository extends JpaRepository<Budget, UUID> {
-    Optional<Budget> findByIdAndDeletedAtIsNull(UUID uuid);
+    Optional<Budget> findByIdAndUserId(UUID id, UUID userId);
 
-    Optional<Budget> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
+    Page<Budget> findAllByUserId(UUID userId, Pageable pageable);
 
-    Page<Budget> findAllByUserIdAndDeletedAtIsNull(UUID userId, Pageable pageable);
+    Optional<Budget> findByUserIdAndAmountAndCategory(UUID userId, BigDecimal amount, ExpenseCategory category);
 
-    @Query("""
-        SELECT i FROM Budget i
-        WHERE i.user.id = :userId
-            AND i.amount = :amount
-            AND i.category = :category
-            AND i.deletedAt IS NULL
-    """)
-    Optional<Budget> findRecurringBudget(
-            @Param("userId") UUID userId,
-            @Param("amount") BigDecimal amount,
-            @Param("category") ExpenseCategory category
-    );
-
-    @Query("""
-        SELECT i FROM Budget i
-        WHERE i.user.id = :userId
-            AND i.month = :month
-            AND i.deletedAt IS NULL
-        ORDER BY i.createdAt DESC
-    """)
-    Page<Budget> findByUserAndDate(
-            @Param("userId") UUID userId,
-            @Param("month") YearMonth month,
-            Pageable pageable
-    );
+    Page<Budget> findAllByUserIdAndMonthOrderByCreatedAtDesc(UUID userId, YearMonth month, Pageable pageable);
 
     @Query("""
         SELECT COALESCE(SUM(i.amount), 0)
@@ -56,18 +32,7 @@ public interface BudgetRepository extends JpaRepository<Budget, UUID> {
     """)
     BigDecimal getTotalBudgetByMonth(@Param("userId") UUID userId, @Param("month") YearMonth month);
 
-    @Query("""
-        SELECT i FROM Budget i
-        WHERE i.user.id = :userId
-            AND i.month = :month
-            AND i.category = :category
-            AND i.deletedAt IS NULL
-    """)
-    Optional<Budget> findByUserAndCategoryAndDate(
-            @Param("userId") UUID userId,
-            @Param("month") YearMonth month,
-            @Param("category") ExpenseCategory category
-    );
+    Optional<Budget> findByUserIdAndMonthAndCategory(UUID userId, YearMonth month, ExpenseCategory category);
 
     @Query(value = """
         SELECT i.month AS month,

@@ -82,7 +82,7 @@ public class IncomeService implements IIncomeService {
     public BaseResponseDto<Income> updateIncome(UUID id, UpdateIncomeRequestDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
-        Income income = this.incomeRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
+        Income income = this.incomeRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Income with given ID not found"));
 
 
@@ -96,7 +96,7 @@ public class IncomeService implements IIncomeService {
         }
 
         Optional<Transactions> transaction = this.transactionRepository
-                .findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDeletedAtIsNull(
+                .findByUserIdAndAmountAndDirectionAndTransactionDateTime(
                         user.getId(),
                         income.getAmount(),
                         TransactionDirection.credit,
@@ -132,7 +132,7 @@ public class IncomeService implements IIncomeService {
     public BaseResponseDto<Income> getIncomeById(UUID id) {
         User user = this.userService.getAuthenticatedUser();
 
-        Income income = this.incomeRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
+        Income income = this.incomeRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Income not found"));
 
         log.info("Successfully retrieved income for user {}", user.getEmail());
@@ -148,7 +148,7 @@ public class IncomeService implements IIncomeService {
     ) {
         User user = this.userService.getAuthenticatedUser();
 
-        Page<Income> incomes = this.incomeRepository.findByUserAndDate(
+        Page<Income> incomes = this.incomeRepository.findAllByUserIdAndMonthOrderByCreatedAtDesc(
                 user.getId(), month, PageRequest.of(page - 1 , limit)
         );
 
@@ -164,7 +164,7 @@ public class IncomeService implements IIncomeService {
         User user = this.userService.getAuthenticatedUser();
 
         Page<Income> incomes = this.incomeRepository
-                .findByUserIdAndDeletedAtIsNull(user.getId(), PageRequest.of(page - 1, limit));
+                .findAllByUserId(user.getId(), PageRequest.of(page - 1, limit));
 
         BigDecimal totalIncome = this.incomeRepository.sumIncome(user.getId());
 
@@ -180,9 +180,7 @@ public class IncomeService implements IIncomeService {
     public BaseResponseDto<Object> deleteIncomeById(UUID id) {
         Income income = this.getIncomeById(id).getData();
 
-        income.setDeletedAt(LocalDateTime.now());
-
-        this.incomeRepository.save(income);
+        incomeRepository.deleteById(income.getId());
 
         log.info("Successfully deleted income with id {}", income.getId());
         return BaseResponseDto.builder()

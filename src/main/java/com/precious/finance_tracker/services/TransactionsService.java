@@ -12,6 +12,7 @@ import com.precious.finance_tracker.repositories.TransactionRepository;
 import com.precious.finance_tracker.services.interfaces.ITransactionService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TransactionsService implements ITransactionService {
     private final TransactionRepository transactionRepository;
     private final UserService userService;
@@ -51,13 +53,14 @@ public class TransactionsService implements ITransactionService {
     public BaseResponseDto<Transactions> updateTransaction(UUID id, UpdateTransactionDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
-        Transactions transaction = this.transactionRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
+        Transactions transaction = this.transactionRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Transaction record not found"));
 
         if (dto.getAmount() != null) transaction.setAmount(dto.getAmount());
         if (dto.getDescription() != null) transaction.setDescription(dto.getDescription());
         if (dto.getDirection() != null) transaction.setDirection(dto.getDirection());
 
+        log.info("Successfully updated transaction for user {}", user.getEmail());
         return BaseResponseDto.<Transactions>builder()
                 .status("Success")
                 .message("Successfully updated transaction record")
@@ -68,9 +71,10 @@ public class TransactionsService implements ITransactionService {
     public BaseResponseDto<Transactions> getTransactionById(UUID id) {
         User user = this.userService.getAuthenticatedUser();
 
-        Transactions transaction = this.transactionRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
+        Transactions transaction = this.transactionRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Transaction record not found"));
 
+        log.info("Successfully retrieved transactions for user {}", user.getEmail());
         return BaseResponseDto.<Transactions>builder()
                 .status("Success")
                 .message("Successfully retrieved transaction record")
@@ -83,7 +87,7 @@ public class TransactionsService implements ITransactionService {
     ) {
         User user = this.userService.getAuthenticatedUser();
 
-        Page<Transactions> transactions = this.transactionRepository.findByUserAndDateAndDirection(
+        Page<Transactions> transactions = this.transactionRepository.findByUserIdAndMonthAndDirection(
                 user.getId(),
                 month,
                 direction,
@@ -128,13 +132,12 @@ public class TransactionsService implements ITransactionService {
     public BaseResponseDto<Object> deleteTransactionById(UUID id) {
         User user = this.userService.getAuthenticatedUser();
 
-        Transactions transaction = this.transactionRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
+        Transactions transaction = this.transactionRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Transaction record not found"));
 
-        transaction.setDeletedAt(LocalDateTime.now());
+        this.transactionRepository.deleteById(transaction.getId());
 
-        this.transactionRepository.save(transaction);
-
+        log.info("Successfully deleted transaction for user {}", user.getEmail());
         return BaseResponseDto.builder()
                 .status("Success")
                 .message("Successfully deleted transaction record")

@@ -10,11 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
-    Optional<User> findByIdAndDeletedAtIsNull(UUID uuid);
+    Optional<User> findByEmail(String email);
 
-    Optional<User> findByEmailAndDeletedAtIsNull(String email);
-
-    Optional<User> findByOtpAndDeletedAtIsNull(String otp);
-
-    Page<User> findByDeletedAtIsNull(Pageable pageable);
+    Optional<User> findByOtp(String otp);
 }

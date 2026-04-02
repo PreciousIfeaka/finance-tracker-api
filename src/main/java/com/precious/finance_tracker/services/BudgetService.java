@@ -36,7 +36,6 @@ public class BudgetService implements IBudgetService {
     private static final Logger log = LoggerFactory.getLogger(BudgetService.class.getName());
 
     private final IUserService userService;
-    private final IIncomeService incomeService;
     private final IncomeRepository incomeRepository;
     private final BudgetRepository budgetRepository;
     private final ExpenseRepository expenseRepository;
@@ -46,7 +45,11 @@ public class BudgetService implements IBudgetService {
         User user = userService.getAuthenticatedUser();
         YearMonth currentMonth = YearMonth.now();
 
-        List<Income> currentMonthIncomes = this.incomeRepository.findByUserAndDate(user.getId(), currentMonth);
+        List<Income> currentMonthIncomes =
+                this.incomeRepository.findAllByUserIdAndMonthOrderByCreatedAtDesc(
+                        user.getId(),
+                        currentMonth
+                );
 
         if (currentMonthIncomes.isEmpty()) {
             throw new BadRequestException("An income for the month has to be added");
@@ -62,7 +65,7 @@ public class BudgetService implements IBudgetService {
         }
 
         boolean categoryAlreadyBudgeted = this.budgetRepository
-                .findByUserAndCategoryAndDate(user.getId(), currentMonth, dto.category())
+                .findByUserIdAndMonthAndCategory(user.getId(), currentMonth, dto.category())
                 .isPresent();
 
         if (categoryAlreadyBudgeted) {
@@ -70,7 +73,7 @@ public class BudgetService implements IBudgetService {
         }
 
         boolean allCategoryBudgetExists = this.budgetRepository
-                .findByUserAndCategoryAndDate(user.getId(), currentMonth, ExpenseCategory.all)
+                .findByUserIdAndMonthAndCategory(user.getId(), currentMonth, ExpenseCategory.all)
                 .isPresent();
 
         if (allCategoryBudgetExists) {
@@ -83,7 +86,7 @@ public class BudgetService implements IBudgetService {
             throw new BadRequestException("An 'all-categories' budget cannot be added when other budgets exist for this month.");
         }
 
-        Optional<Budget> existingBudget = this.budgetRepository.findRecurringBudget(
+        Optional<Budget> existingBudget = this.budgetRepository.findByUserIdAndAmountAndCategory(
                 user.getId(), dto.amount(), dto.category()
         );
 
@@ -125,7 +128,7 @@ public class BudgetService implements IBudgetService {
     public BaseResponseDto<Budget> getBudget(UUID id) {
         User user = this.userService.getAuthenticatedUser();
 
-        Budget budget = this.budgetRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
+        Budget budget = this.budgetRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Budget not found"));
 
         log.info("Successfully retrieved budget for user {}", user.getEmail());
@@ -140,7 +143,7 @@ public class BudgetService implements IBudgetService {
         User user = this.userService.getAuthenticatedUser();
 
         Page<Budget> budgets =
-                this.budgetRepository.findAllByUserIdAndDeletedAtIsNull(
+                this.budgetRepository.findAllByUserId(
                         user.getId(), PageRequest.of(page - 1, limit)
                 );
 
@@ -203,7 +206,7 @@ public class BudgetService implements IBudgetService {
     ) {
         User user = this.userService.getAuthenticatedUser();
 
-        Page<Budget> budgets = this.budgetRepository.findByUserAndDate(
+        Page<Budget> budgets = this.budgetRepository.findAllByUserIdAndMonthOrderByCreatedAtDesc(
                 user.getId(), month, PageRequest.of(page - 1, limit)
         );
 

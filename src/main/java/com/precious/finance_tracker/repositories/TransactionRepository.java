@@ -17,36 +17,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transactions, UUID> {
-    Page<Transactions> findByUserIdAndDeletedAtIsNull(UUID userId, Pageable pageable);
-
-    @Query("""
-        SELECT t FROM Transactions t
-        WHERE t.user.id = :userId
-            AND t.deletedAt IS NULL
-            AND (:month IS NULL OR t.month = :month)
-            AND (:direction IS NULL OR t.direction = :direction)
-        ORDER BY t.createdAt DESC
-    """)
-    Page<Transactions> findByUserAndDateAndDirection(
+    Page<Transactions> findByUserIdAndMonthAndDirection(
             @Param("userId") UUID userId,
             @Param("month") YearMonth month,
             @Param("direction") TransactionDirection direction,
             Pageable pageable
     );
 
-    @Query("""
-        SELECT t FROM Transactions t
-        WHERE t.user.id = :userId
-            AND t.deletedAt IS NULL
-            AND (:month IS NULL OR t.month = :month)
-            AND (:direction IS NULL OR t.direction = :direction)
-        ORDER BY t.createdAt DESC
-    """)
-    List<Transactions> findByUserAndDateAndDirection(
-            @Param("userId") UUID userId,
-            @Param("month") YearMonth month,
-            @Param("direction") TransactionDirection direction
-    );
 
     @Query(value = """
         SELECT t.month AS month,
@@ -78,24 +55,9 @@ public interface TransactionRepository extends JpaRepository<Transactions, UUID>
             @Param("month") YearMonth month
     );
 
-    Optional<Transactions> findByIdAndDeletedAtIsNull(UUID id);
+    Optional<Transactions> findByIdAndUserId(UUID id, UUID userId);
 
-    @Query(value = """
-        SELECT t from Transactions t
-        WHERE t.user.id = :userId
-            AND t.direction = :direction
-            AND t.amount = :amount
-            AND t.deletedAt IS NULL
-    """)
-    Optional<Transactions> findByUserAndAmountAndDirectionAndDeletedAtIsNull(
-            @Param("userId") UUID userId,
-            @Param("direction") TransactionDirection direction,
-            @Param("amount") BigDecimal amount
-    );
-
-    Optional<Transactions> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
-
-    Optional<Transactions> findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDeletedAtIsNull(
+    Optional<Transactions> findByUserIdAndAmountAndDirectionAndTransactionDateTime(
             UUID userId, BigDecimal amount, TransactionDirection direction, LocalDateTime transactionDateTime
     );
 }

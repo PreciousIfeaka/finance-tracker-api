@@ -10,8 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface BankStatementRepository extends JpaRepository<BankStatement, UUID> {
-    Optional<BankStatement> findByIdAndDeletedAtIsNull(UUID id);
-    Optional<BankStatement> findByIdAndUserIdAndDeletedAtIsNull(UUID uuid, UUID userId);
-    Optional<BankStatement> findByUserIdAndMonthAndDeletedAtIsNull(UUID userId, YearMonth month);
-    Page<BankStatement> findAllByUserIdAndDeletedAtIsNull(UUID userId, Pageable pageable);
+    Optional<BankStatement> findByIdAndUserId(UUID id, UUID userId);
+    Optional<BankStatement> findByUserIdAndMonth(UUID userId, YearMonth month);
+    Page<BankStatement> findAllByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 }

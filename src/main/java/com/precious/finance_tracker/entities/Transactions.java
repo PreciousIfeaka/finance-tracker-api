@@ -19,6 +19,9 @@ import java.time.YearMonth;
 @Getter
 @Setter
 @Entity
+@Table(name = "transactions", indexes = {
+        @Index(name = "idx_trx_user_month_direction", columnList = "user_id, month, direction")
+})
 public class Transactions extends AbstractBaseEntity {
     @Column(nullable = false)
     private BigDecimal amount;

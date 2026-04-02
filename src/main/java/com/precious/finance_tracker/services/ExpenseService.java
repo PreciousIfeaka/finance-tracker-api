@@ -20,7 +20,6 @@ import com.precious.finance_tracker.repositories.TransactionRepository;
 import com.precious.finance_tracker.repositories.UserRepository;
 import com.precious.finance_tracker.services.interfaces.IExpenseService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.*;
 
@@ -54,7 +52,7 @@ public class ExpenseService implements IExpenseService {
                 ? YearMonth.from(dto.getTransactionDateTime())
                 : YearMonth.now();
 
-        Optional<Budget> categoryBudget = this.budgetRepository.findByUserAndCategoryAndDate(
+        Optional<Budget> categoryBudget = this.budgetRepository.findByUserIdAndMonthAndCategory(
                         user.getId(), currentMonth, dto.getCategory()
         );
 
@@ -100,7 +98,7 @@ public class ExpenseService implements IExpenseService {
     public BaseResponseDto<Expense> updateExpense(UUID id, UpdateExpenseRequestDto dto) {
         User user = this.userService.getAuthenticatedUser();
 
-        Expense expense = this.expenseRepository.findByIdAndDeletedAtIsNull(id)
+        Expense expense = this.expenseRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Expense with given ID not found"));
 
         if (!user.getExpenses().contains(expense)) {
@@ -110,7 +108,7 @@ public class ExpenseService implements IExpenseService {
         String budgetWarnMessage = "";
 
         Optional<Budget> categoryBudget =
-                this.budgetRepository.findByUserAndCategoryAndDate(
+                this.budgetRepository.findByUserIdAndMonthAndCategory(
                         user.getId(), expense.getMonth(), expense.getCategory()
                 );
         if (
@@ -124,7 +122,7 @@ public class ExpenseService implements IExpenseService {
         }
 
         Optional<Transactions> transaction = this.transactionRepository
-                .findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDeletedAtIsNull(
+                .findByUserIdAndAmountAndDirectionAndTransactionDateTime(
                         user.getId(),
                         expense.getAmount(),
                         TransactionDirection.debit,
@@ -169,7 +167,7 @@ public class ExpenseService implements IExpenseService {
     public BaseResponseDto<Expense> getExpenseById(UUID id) {
         User user = this.userService.getAuthenticatedUser();
 
-        Expense expense = this.expenseRepository.findByIdAndUserIdAndDeletedAtIsNull(id, user.getId())
+        Expense expense = this.expenseRepository.findByIdAndUserId(id, user.getId())
                 .orElseThrow(() -> new NotFoundException("Expense not found"));
 
         log.info("Successfully retrieved expense for user {}", user.getEmail());
@@ -185,7 +183,7 @@ public class ExpenseService implements IExpenseService {
     ) {
         User user = this.userService.getAuthenticatedUser();
 
-        Page<Expense> expenses = this.expenseRepository.findByUserAndDate(
+        Page<Expense> expenses = this.expenseRepository.findAllByUserIdAndMonthOrderByCreatedAtDesc(
                 user.getId(), month, PageRequest.of(page - 1, limit)
         );
 
@@ -202,7 +200,7 @@ public class ExpenseService implements IExpenseService {
     ) {
         User user = this.userService.getAuthenticatedUser();
 
-        Page<Expense> expenses = this.expenseRepository.findByUserAndCategoryAndDate(
+        Page<Expense> expenses = this.expenseRepository.findAllByUserIdAndMonthAndCategoryOrderByCreatedAtDesc(
                 user.getId(), month, category, PageRequest.of(page - 1, limit)
         );
 
@@ -226,7 +224,7 @@ public class ExpenseService implements IExpenseService {
         User user = this.userService.getAuthenticatedUser();
 
         Page<Expense> expenses = this.expenseRepository
-                .findByUserIdAndDeletedAtIsNull(user.getId(), PageRequest.of(page - 1, limit));
+                .findAllByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page - 1, limit));
 
         BigDecimal totalExpenses = this.expenseRepository.sumExpense(user.getId());
 
@@ -245,7 +243,7 @@ public class ExpenseService implements IExpenseService {
         Expense expense = this.getExpenseById(id).getData();
 
         Optional<Budget> categoryBudget =
-                this.budgetRepository.findByUserAndCategoryAndDate(
+                this.budgetRepository.findByUserIdAndMonthAndCategory(
                         user.getId(), expense.getMonth(), expense.getCategory()
                 );
         if (

@@ -21,6 +21,10 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
+@Table(name = "users", indexes = {
+        @Index(name = "idx_user_email", columnList = "email"),
+        @Index(name = "idx_user_otp", columnList = "otp")
+})
 public class User extends AbstractBaseEntity implements UserDetails {
     @Column(nullable = false)
     private String name;
@@ -31,6 +35,7 @@ public class User extends AbstractBaseEntity implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Builder.Default
     private Boolean isVerified = false;
 
     @Enumerated(EnumType.STRING)

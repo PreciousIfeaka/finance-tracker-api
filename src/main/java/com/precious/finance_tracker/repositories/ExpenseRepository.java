@@ -15,47 +15,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
-    Optional<Expense> findByIdAndDeletedAtIsNull(UUID id);
+    Page<Expense> findAllByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
-    Page<Expense> findByUserIdAndDeletedAtIsNull(UUID userId, Pageable pageable);
-
-    @Query("""
-        SELECT e FROM Expense e
-        WHERE e.user.id = :userId
-            AND e.amount = :amount
-            AND e.category = :category
-            AND e.deletedAt IS NULL
-    """)
-    Optional<Expense> findRecurringExpense(
-            @Param("userId") UUID userId,
-            @Param("amount") BigDecimal amount,
-            @Param("category") ExpenseCategory category
-            );
-
-    @Query("""
-        SELECT e FROM Expense e
-        WHERE e.user.id = :userId
-            AND e.month = :month
-            AND e.deletedAt IS NULL
-        ORDER BY e.createdAt DESC
-    """)
-    Page<Expense> findByUserAndDate(
-            @Param("userId") UUID userId,
-            @Param("month") YearMonth month,
-            Pageable pageable
-    );
-
-    @Query("""
-        SELECT e FROM Expense e
-        WHERE e.user.id = :userId
-            AND e.month = :month
-            AND e.deletedAt IS NULL
-        ORDER BY e.createdAt DESC
-    """)
-    List<Expense> findByUserAndDate(
-            @Param("userId") UUID userId,
-            @Param("month") YearMonth month
-    );
+    Page<Expense> findAllByUserIdAndMonthOrderByCreatedAtDesc(UUID userId, YearMonth month, Pageable pageable);
+    List<Expense> findAllByUserIdAndMonthOrderByCreatedAtDesc(UUID userId, YearMonth month);
 
     @Query("""
         SELECT COALESCE(SUM(e.amount), 0)
@@ -84,17 +47,10 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     """)
     BigDecimal sumExpense(@Param("userId") UUID userId);
 
-    @Query("""
-        SELECT e FROM Expense e
-        WHERE e.user.id = :userId
-            AND e.month = :month
-            AND e.category = :category
-            AND e.deletedAt IS NULL
-    """)
-    Page<Expense> findByUserAndCategoryAndDate(
-            @Param("userId") UUID userId,
-            @Param("month") YearMonth month,
-            @Param("category") ExpenseCategory category,
+    Page<Expense> findAllByUserIdAndMonthAndCategoryOrderByCreatedAtDesc(
+            UUID userId,
+            YearMonth month,
+            ExpenseCategory category,
             Pageable pageable
     );
 
@@ -112,5 +68,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
             @Param("category") ExpenseCategory category
     );
 
-    Optional<Expense> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
+    Optional<Expense> findByIdAndUserId(UUID id, UUID userId);
 }

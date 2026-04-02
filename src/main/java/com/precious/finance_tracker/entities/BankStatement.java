@@ -20,6 +20,10 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
+@Table(name = "bank_statement", indexes = {
+        @Index(name = "idx_bs_user", columnList = "user_id"),
+        @Index(name = "idx_bs_user_month", columnList = "user_id, month")
+})
 public class BankStatement extends  AbstractBaseEntity {
     @ElementCollection
     private List<DocumentUrls> documentUrls;
