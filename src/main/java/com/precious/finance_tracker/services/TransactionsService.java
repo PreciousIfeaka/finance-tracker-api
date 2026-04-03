@@ -61,7 +61,10 @@ public class TransactionsService implements ITransactionService {
         if (dto.getAmount() != null) transaction.setAmount(dto.getAmount());
         if (dto.getDescription() != null) transaction.setDescription(dto.getDescription());
         if (dto.getDirection() != null) transaction.setDirection(dto.getDirection());
-        if (dto.getTransactionDateTime() != null) transaction.setTransactionDateTime(dto.getTransactionDateTime());
+        if (dto.getTransactionDateTime() != null) {
+            transaction.setTransactionDateTime(dto.getTransactionDateTime());
+            transaction.setMonth(YearMonth.from(dto.getTransactionDateTime()));
+        }
 
         log.info("Successfully updated transaction for user {}", user.getEmail());
         return BaseResponseDto.<Transactions>builder()
