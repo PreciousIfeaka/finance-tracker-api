@@ -16,9 +16,9 @@ import java.util.UUID;
 public interface IncomeRepository extends JpaRepository<Income, UUID> {
     Page<Income> findAllByUserId(UUID userId, Pageable pageable);
 
-    Page<Income> findAllByUserIdAndMonthOrderByCreatedAtDesc(UUID userId, YearMonth month, Pageable pageable);
+    Page<Income> findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(UUID userId, YearMonth month, Pageable pageable);
 
-    List<Income> findAllByUserIdAndMonthOrderByCreatedAtDesc(UUID userId, YearMonth month);
+    List<Income> findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(UUID userId, YearMonth month);
 
     @Query(value = """
         SELECT i.month AS month,

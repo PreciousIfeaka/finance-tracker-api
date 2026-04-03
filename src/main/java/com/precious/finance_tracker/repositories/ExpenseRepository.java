@@ -17,8 +17,8 @@ import java.util.UUID;
 public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     Page<Expense> findAllByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
-    Page<Expense> findAllByUserIdAndMonthOrderByCreatedAtDesc(UUID userId, YearMonth month, Pageable pageable);
-    List<Expense> findAllByUserIdAndMonthOrderByCreatedAtDesc(UUID userId, YearMonth month);
+    Page<Expense> findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(UUID userId, YearMonth month, Pageable pageable);
+    List<Expense> findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(UUID userId, YearMonth month);
 
     @Query("""
         SELECT COALESCE(SUM(e.amount), 0)
@@ -47,7 +47,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     """)
     BigDecimal sumExpense(@Param("userId") UUID userId);
 
-    Page<Expense> findAllByUserIdAndMonthAndCategoryOrderByCreatedAtDesc(
+    Page<Expense> findAllByUserIdAndMonthAndCategoryOrderByTransactionDateTimeDesc(
             UUID userId,
             YearMonth month,
             ExpenseCategory category,

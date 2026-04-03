@@ -22,6 +22,7 @@ import com.precious.finance_tracker.services.interfaces.ITransactionService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -36,9 +37,8 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class IncomeService implements IIncomeService {
-    private final static Logger log = LoggerFactory.getLogger(IncomeService.class.getName());
-
     private final IncomeRepository incomeRepository;
     private final IUserService userService;
     private final ITransactionService transactionsService;
@@ -150,7 +150,7 @@ public class IncomeService implements IIncomeService {
     ) {
         User user = this.userService.getAuthenticatedUser();
 
-        Page<Income> incomes = this.incomeRepository.findAllByUserIdAndMonthOrderByCreatedAtDesc(
+        Page<Income> incomes = this.incomeRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(
                 user.getId(), month, PageRequest.of(page - 1 , limit)
         );
 

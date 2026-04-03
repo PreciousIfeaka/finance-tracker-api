@@ -23,7 +23,7 @@ public interface TransactionRepository extends JpaRepository<Transactions, UUID>
       AND t.deletedAt IS NULL
       AND (:month IS NULL OR t.month = :month)
       AND (:direction IS NULL OR t.direction = :direction)
-    ORDER BY t.createdAt DESC
+    ORDER BY t.transactionDateTime DESC
 """)
     Page<Transactions> findByUserIdAndMonthAndDirection(
             @Param("userId") UUID userId,

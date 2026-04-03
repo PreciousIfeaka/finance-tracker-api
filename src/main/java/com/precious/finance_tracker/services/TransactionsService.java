@@ -43,7 +43,7 @@ public class TransactionsService implements ITransactionService {
         Transactions transaction = Transactions.builder()
                 .amount(dto.getAmount())
                 .direction(dto.getDirection())
-                .month(YearMonth.now())
+                .month(YearMonth.from(dto.getTransactionDateTime()))
                 .transactionDateTime(dto.getTransactionDateTime())
                 .user(user)
                 .description(dto.getDescription())
@@ -61,6 +61,7 @@ public class TransactionsService implements ITransactionService {
         if (dto.getAmount() != null) transaction.setAmount(dto.getAmount());
         if (dto.getDescription() != null) transaction.setDescription(dto.getDescription());
         if (dto.getDirection() != null) transaction.setDirection(dto.getDirection());
+        if (dto.getTransactionDateTime() != null) transaction.setTransactionDateTime(dto.getTransactionDateTime());
 
         log.info("Successfully updated transaction for user {}", user.getEmail());
         return BaseResponseDto.<Transactions>builder()
