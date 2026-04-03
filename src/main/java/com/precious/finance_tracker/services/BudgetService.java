@@ -46,7 +46,7 @@ public class BudgetService implements IBudgetService {
         YearMonth currentMonth = YearMonth.now();
 
         List<Income> currentMonthIncomes =
-                this.incomeRepository.findAllByUserIdAndMonthOrderByCreatedAtDesc(
+                this.incomeRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(
                         user.getId(),
                         currentMonth
                 );

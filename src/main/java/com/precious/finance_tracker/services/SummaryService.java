@@ -88,8 +88,8 @@ public class SummaryService implements ISummaryService {
             month = YearMonth.now();
         }
 
-        List<Income> incomes = incomeRepository.findAllByUserIdAndMonthOrderByCreatedAtDesc(user.getId(), month);
-        List<Expense> expenses = expenseRepository.findAllByUserIdAndMonthOrderByCreatedAtDesc(user.getId(), month);
+        List<Income> incomes = incomeRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(user.getId(), month);
+        List<Expense> expenses = expenseRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(user.getId(), month);
         BigDecimal totalBudget = budgetRepository.getTotalBudgetByMonth(user.getId(), month);
         
         BigDecimal[] weeklyIncome = new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO};

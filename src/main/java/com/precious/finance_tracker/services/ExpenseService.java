@@ -185,7 +185,7 @@ public class ExpenseService implements IExpenseService {
     ) {
         User user = this.userService.getAuthenticatedUser();
 
-        Page<Expense> expenses = this.expenseRepository.findAllByUserIdAndMonthOrderByCreatedAtDesc(
+        Page<Expense> expenses = this.expenseRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(
                 user.getId(), month, PageRequest.of(page - 1, limit)
         );
 
@@ -202,7 +202,7 @@ public class ExpenseService implements IExpenseService {
     ) {
         User user = this.userService.getAuthenticatedUser();
 
-        Page<Expense> expenses = this.expenseRepository.findAllByUserIdAndMonthAndCategoryOrderByCreatedAtDesc(
+        Page<Expense> expenses = this.expenseRepository.findAllByUserIdAndMonthAndCategoryOrderByTransactionDateTimeDesc(
                 user.getId(), month, category, PageRequest.of(page - 1, limit)
         );
 
