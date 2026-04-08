@@ -187,7 +187,7 @@ public class IncomeService implements IIncomeService {
         log.info("Successfully deleted income with id {}", income.getId());
         return BaseResponseDto.builder()
                 .status("Success")
-                .message("Successfully deleted income with ID " + income.getId())
+                .message("Successfully deleted income")
                 .build();
     }
 

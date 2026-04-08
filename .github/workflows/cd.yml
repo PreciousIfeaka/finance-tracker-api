@@ -56,7 +56,7 @@ jobs:
             # Pull the new image
             docker compose pull fintrack_app
             
-            # Recreate the container
+            # Recreate the containers
             docker compose up -d
             
             # Clean up dangling images to save space
