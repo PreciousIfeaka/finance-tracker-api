@@ -1,11 +1,7 @@
 package com.precious.finance_tracker.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.precious.finance_tracker.dtos.BaseResponseDto;
-import com.precious.finance_tracker.dtos.gemini.GeminiRequest;
-import com.precious.finance_tracker.dtos.gemini.GeminiResponse;
 import com.precious.finance_tracker.dtos.statement.CreateStatementRequestDto;
 import com.precious.finance_tracker.dtos.statement.UpdateStatementRequestDto;
 import com.precious.finance_tracker.entities.BankStatement;
@@ -40,7 +36,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -101,7 +96,8 @@ class BankStatementAnalysisTest {
         dto.setDocumentUrls(List.of(new DocumentUrls("key1", "pdf")));
 
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        when(bankStatementRepository.findByUserIdAndMonth(mockUser.getId(), dto.getMonth())).thenReturn(Optional.empty());
+        when(bankStatementRepository.findByUserIdAndMonth(mockUser.getId(), dto.getMonth()))
+                .thenReturn(Optional.empty());
         when(bankStatementRepository.save(any(BankStatement.class))).thenReturn(mockStatement);
 
         BaseResponseDto<BankStatement> response = bankStatementAnalysis.addBankStatement(dto);
@@ -117,7 +113,8 @@ class BankStatementAnalysisTest {
         dto.setDocumentUrls(List.of(new DocumentUrls("key1", "pdf")));
 
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        when(bankStatementRepository.findByUserIdAndMonth(mockUser.getId(), dto.getMonth())).thenReturn(Optional.of(mockStatement));
+        when(bankStatementRepository.findByUserIdAndMonth(mockUser.getId(), dto.getMonth()))
+                .thenReturn(Optional.of(mockStatement));
 
         assertThrows(ConflictResourceException.class, () -> bankStatementAnalysis.addBankStatement(dto));
         verify(bankStatementRepository, never()).save(any());
@@ -128,9 +125,8 @@ class BankStatementAnalysisTest {
         CreateStatementRequestDto dto = new CreateStatementRequestDto();
         dto.setMonth(YearMonth.now());
         dto.setDocumentUrls(List.of(
-            new DocumentUrls("1", "pdf"), new DocumentUrls("2", "pdf"),
-            new DocumentUrls("3", "pdf"), new DocumentUrls("4", "pdf"), new DocumentUrls("5", "pdf")
-        ));
+                new DocumentUrls("1", "pdf"), new DocumentUrls("2", "pdf"),
+                new DocumentUrls("3", "pdf"), new DocumentUrls("4", "pdf"), new DocumentUrls("5", "pdf")));
 
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
 
@@ -140,7 +136,8 @@ class BankStatementAnalysisTest {
     @Test
     void startAnalysis_ShouldEnqueueJobAndSetStatus() {
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        when(bankStatementRepository.findByIdAndUserId(mockStatement.getId(), mockUser.getId())).thenReturn(Optional.of(mockStatement));
+        when(bankStatementRepository.findByIdAndUserId(mockStatement.getId(), mockUser.getId()))
+                .thenReturn(Optional.of(mockStatement));
 
         BaseResponseDto<BankStatement> response = bankStatementAnalysis.startAnalysis(mockStatement.getId());
 
@@ -149,22 +146,25 @@ class BankStatementAnalysisTest {
         assertEquals(StatementAnalysisStatus.IN_PROGRESS, mockStatement.getStatus());
         verify(bankStatementRepository).save(mockStatement);
     }
-    
+
     @Test
     void updateBankStatements_ShouldThrowBadRequest_WhenInProgress() {
         mockStatement.setStatus(StatementAnalysisStatus.IN_PROGRESS);
         UpdateStatementRequestDto dto = new UpdateStatementRequestDto();
-        
-        when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        when(bankStatementRepository.findByIdAndUserId(mockStatement.getId(), mockUser.getId())).thenReturn(Optional.of(mockStatement));
 
-        assertThrows(BadRequestException.class, () -> bankStatementAnalysis.updateBankStatements(mockStatement.getId(), dto));
+        when(userService.getAuthenticatedUser()).thenReturn(mockUser);
+        when(bankStatementRepository.findByIdAndUserId(mockStatement.getId(), mockUser.getId()))
+                .thenReturn(Optional.of(mockStatement));
+
+        assertThrows(BadRequestException.class,
+                () -> bankStatementAnalysis.updateBankStatements(mockStatement.getId(), dto));
     }
 
     @Test
     void deleteBankStatement_ShouldDeleteAndRemoveFromS3() {
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        when(bankStatementRepository.findByIdAndUserId(mockStatement.getId(), mockUser.getId())).thenReturn(Optional.of(mockStatement));
+        when(bankStatementRepository.findByIdAndUserId(mockStatement.getId(), mockUser.getId()))
+                .thenReturn(Optional.of(mockStatement));
 
         BaseResponseDto<Object> response = bankStatementAnalysis.deleteBankStatement(mockStatement.getId());
 

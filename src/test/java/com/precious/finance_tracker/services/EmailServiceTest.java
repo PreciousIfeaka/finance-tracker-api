@@ -11,7 +11,6 @@ import org.jobrunr.scheduling.JobScheduler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -72,10 +71,10 @@ class EmailServiceTest {
 
         verify(javaMailSender).send(mockMimeMessage);
     }
-    
+
     @Test
     void buildAndSendOtpEmail_ShouldThrowInternalServerError_WhenMessagingException() throws MessagingException {
-         VerifyEmailDto dto = VerifyEmailDto.builder()
+        VerifyEmailDto dto = VerifyEmailDto.builder()
                 .firstName("John")
                 .recipientEmail("john@example.com")
                 .otp("123456")

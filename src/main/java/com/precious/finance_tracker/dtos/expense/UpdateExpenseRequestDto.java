@@ -1,7 +1,6 @@
 package com.precious.finance_tracker.dtos.expense;
 
 import com.precious.finance_tracker.enums.ExpenseCategory;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data

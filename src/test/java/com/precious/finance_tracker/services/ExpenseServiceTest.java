@@ -1,7 +1,6 @@
 package com.precious.finance_tracker.services;
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
-import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.expense.AddExpenseRequestDto;
 import com.precious.finance_tracker.dtos.expense.MonthlyExpenseStatsResponseDto;
 import com.precious.finance_tracker.dtos.expense.PagedExpenseResponseDto;
@@ -14,7 +13,6 @@ import com.precious.finance_tracker.entities.User;
 import com.precious.finance_tracker.enums.ExpenseCategory;
 import com.precious.finance_tracker.enums.TransactionDirection;
 import com.precious.finance_tracker.exceptions.ForbiddenException;
-import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.BudgetRepository;
 import com.precious.finance_tracker.repositories.ExpenseRepository;
 import com.precious.finance_tracker.repositories.TransactionRepository;
@@ -74,7 +72,7 @@ class ExpenseServiceTest {
         mockExpense = Expense.builder()
                 .id(UUID.randomUUID())
                 .amount(BigDecimal.valueOf(200.00))
-                .category(ExpenseCategory.FOOD)
+                .category(ExpenseCategory.food)
                 .month(YearMonth.now())
                 .user(mockUser)
                 .build();
@@ -84,7 +82,7 @@ class ExpenseServiceTest {
     void addExpenseData_ShouldSaveExpenseAndTransaction_WithBudgetExceededWarn() {
         AddExpenseRequestDto dto = new AddExpenseRequestDto();
         dto.setAmount(BigDecimal.valueOf(150.00));
-        dto.setCategory(ExpenseCategory.FOOD);
+        dto.setCategory(ExpenseCategory.food);
         dto.setNote("Lunch");
         dto.setTransactionDateTime(LocalDateTime.now());
 
@@ -92,7 +90,8 @@ class ExpenseServiceTest {
 
         Budget budget = new Budget();
         budget.setAmount(BigDecimal.valueOf(100.00)); // Budget < Expense
-        when(budgetRepository.findByUserIdAndMonthAndCategory(eq(mockUser.getId()), any(YearMonth.class), eq(ExpenseCategory.FOOD)))
+        when(budgetRepository.findByUserIdAndMonthAndCategory(eq(mockUser.getId()), any(YearMonth.class),
+                eq(ExpenseCategory.food)))
                 .thenReturn(Optional.of(budget));
 
         when(expenseRepository.save(any(Expense.class))).thenReturn(mockExpense);
@@ -118,8 +117,8 @@ class ExpenseServiceTest {
 
         Transactions mockTransaction = new Transactions();
         when(transactionRepository.findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDescription(
-                eq(mockUser.getId()), any(), eq(TransactionDirection.debit), any(), any()
-        )).thenReturn(Optional.of(mockTransaction));
+                eq(mockUser.getId()), any(), eq(TransactionDirection.debit), any(), any()))
+                .thenReturn(Optional.of(mockTransaction));
 
         when(expenseRepository.save(any(Expense.class))).thenReturn(mockExpense);
 
@@ -146,7 +145,8 @@ class ExpenseServiceTest {
     @Test
     void getExpenseById_ShouldReturnExpense() {
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        when(expenseRepository.findByIdAndUserId(mockExpense.getId(), mockUser.getId())).thenReturn(Optional.of(mockExpense));
+        when(expenseRepository.findByIdAndUserId(mockExpense.getId(), mockUser.getId()))
+                .thenReturn(Optional.of(mockExpense));
 
         BaseResponseDto<Expense> result = expenseService.getExpenseById(mockExpense.getId());
 
@@ -159,23 +159,23 @@ class ExpenseServiceTest {
         YearMonth month = YearMonth.now();
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
         Page<Expense> page = new PageImpl<>(List.of(mockExpense));
-        
+
         when(expenseRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(
-                eq(mockUser.getId()), eq(month), any(PageRequest.class)
-        )).thenReturn(page);
+                eq(mockUser.getId()), eq(month), any(PageRequest.class))).thenReturn(page);
         when(expenseRepository.getTotalExpenseByMonth(mockUser.getId(), month)).thenReturn(BigDecimal.valueOf(200.00));
 
         BaseResponseDto<PagedExpenseResponseDto> result = expenseService.getAllExpensesByMonth(1, 10, month);
 
         assertEquals("Success", result.getStatus());
-        assertEquals(1, result.getData().expenses().getTotalElements());
-        assertEquals(BigDecimal.valueOf(200.00), result.getData().totalSum());
+        assertEquals(1, result.getData().getTotal());
+        assertEquals(BigDecimal.valueOf(200.00), result.getData().getTotalExpenses());
     }
 
     @Test
     void deleteExpenseById_ShouldDelete() {
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        when(expenseRepository.findByIdAndUserId(mockExpense.getId(), mockUser.getId())).thenReturn(Optional.of(mockExpense));
+        when(expenseRepository.findByIdAndUserId(mockExpense.getId(), mockUser.getId()))
+                .thenReturn(Optional.of(mockExpense));
 
         BaseResponseDto<Object> result = expenseService.deleteExpenseById(mockExpense.getId());
 
@@ -186,13 +186,13 @@ class ExpenseServiceTest {
     @Test
     void getMonthlyExpenseStats_ShouldReturnStats() {
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        Object[] row = {YearMonth.now(), BigDecimal.valueOf(200.00)};
-        when(expenseRepository.sumExpenseByMonth(mockUser.getId())).thenReturn(List.of(row));
+        Object[] row = { YearMonth.now(), BigDecimal.valueOf(200.00) };
+        when(expenseRepository.sumExpenseByMonth(mockUser.getId())).thenReturn(List.<Object[]>of(row));
 
         BaseResponseDto<List<MonthlyExpenseStatsResponseDto>> result = expenseService.getMonthlyExpenseStats();
 
         assertEquals("Success", result.getStatus());
         assertEquals(1, result.getData().size());
-        assertEquals(BigDecimal.valueOf(200.00), result.getData().get(0).amount());
+        assertEquals(BigDecimal.valueOf(200.00), result.getData().get(0).total());
     }
 }

@@ -67,16 +67,16 @@ class AuthServiceTest {
                 .otpExpiredAt(LocalDateTime.now().plusMinutes(10))
                 .isVerified(false)
                 .build();
-                
-        mockUserResponseDto = new UserResponseDto(
-                mockUser.getId(), 
-                "Jane Doe", 
-                "jane@example.com", 
-                null, 
-                mockUser.getCurrency(), 
-                mockUser.getIsVerified(), 
-                "http://avatar.url"
-        );
+
+        mockUserResponseDto = UserResponseDto.builder()
+                .id(mockUser.getId())
+                .name(mockUser.getName())
+                .email(mockUser.getEmail())
+                .currency(mockUser.getCurrency())
+                .isVerified(mockUser.getIsVerified())
+                .role(mockUser.getRole())
+                .avatarUrl("http://avatar.url")
+                .build();
     }
 
     @Test
@@ -86,24 +86,30 @@ class AuthServiceTest {
         dto.setEmail("jane@example.com");
 
         when(userService.createUser(dto)).thenReturn(mockUser);
-        when(s3UploadService.generatePreSignedUrl(any())).thenReturn("http://s3.url");
+        when(s3UploadService.generatePresignedGetUrl(any())).thenReturn("http://s3.url");
 
         BaseResponseDto<UserResponseDto> result = authService.registerUser(dto);
 
         assertEquals("Success", result.getStatus());
         verify(emailService).sendOtpEmailAsync(any(VerifyEmailDto.class));
     }
-    
+
     @Test
     void login_ShouldReturnToken_WhenCredentialsValidAndVerified() {
         LoginUserDto dto = new LoginUserDto();
         dto.setEmail("jane@example.com");
         dto.setPassword("password");
-        
+
         mockUser.setIsVerified(true);
-        UserResponseDto verifiedUserDto = new UserResponseDto(
-            mockUser.getId(), "Jane Doe", "jane@example.com", null, mockUser.getCurrency(), true, null
-        );
+        UserResponseDto verifiedUserDto = UserResponseDto.builder()
+                .id(mockUser.getId())
+                .name(mockUser.getName())
+                .email(mockUser.getEmail())
+                .currency(mockUser.getCurrency())
+                .isVerified(mockUser.getIsVerified())
+                .role(mockUser.getRole())
+                .avatarUrl("http://avatar.url")
+                .build();
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(mock(Authentication.class));
@@ -113,7 +119,7 @@ class AuthServiceTest {
         BaseResponseDto<AuthResponseDto> result = authService.login(dto);
 
         assertEquals("Success", result.getStatus());
-        assertEquals("access_token", result.getData().accessToken());
+        assertEquals("access_token", result.getData().getAccessToken());
     }
 
     @Test
@@ -136,17 +142,17 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail("jane@example.com")).thenReturn(Optional.of(mockUser));
         when(jwtService.generateToken("jane@example.com")).thenReturn("access_token");
-        when(s3UploadService.generatePreSignedUrl(any())).thenReturn("http://s3.url");
+        when(s3UploadService.generatePresignedGetUrl(any())).thenReturn("http://s3.url");
 
         BaseResponseDto<AuthResponseDto> result = authService.verifyOtp(dto);
 
         assertEquals("Success", result.getStatus());
-        assertEquals("access_token", result.getData().accessToken());
+        assertEquals("access_token", result.getData().getAccessToken());
         assertNull(mockUser.getOtp());
         assertTrue(mockUser.getIsVerified());
         verify(userRepository).save(mockUser);
     }
-    
+
     @Test
     void verifyOtp_ShouldThrowBadRequest_WhenOtpInvalid() {
         VerifyOtpDto dto = new VerifyOtpDto();

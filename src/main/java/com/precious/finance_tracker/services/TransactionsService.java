@@ -7,11 +7,9 @@ import com.precious.finance_tracker.entities.Transactions;
 import com.precious.finance_tracker.entities.User;
 import com.precious.finance_tracker.enums.TransactionDirection;
 import com.precious.finance_tracker.exceptions.BadRequestException;
-import com.precious.finance_tracker.exceptions.ConflictResourceException;
 import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.TransactionRepository;
 import com.precious.finance_tracker.services.interfaces.ITransactionService;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -20,10 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -153,7 +149,7 @@ public class TransactionsService implements ITransactionService {
 
     @Transactional
     public BaseResponseDto<Object> deleteTransactionsByIds(DeleteByIdsDto dto) {
-        this.transactionRepository.deleteAllById(dto.getIds());
+        this.transactionRepository.deleteAllById(dto.ids());
 
         log.info("Successfully deleted selected transactions");
 

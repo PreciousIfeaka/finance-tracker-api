@@ -18,7 +18,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -123,7 +122,8 @@ class S3UploadServiceTest {
     void generatePresignedGetUrl_ShouldReturnUrl() throws MalformedURLException {
         PresignedGetObjectRequest presignedRequest = mock(PresignedGetObjectRequest.class);
         when(presignedRequest.url()).thenReturn(new URL("https://s3.amazonaws.com/test-bucket/test-key"));
-        when(s3Presigner.presignGetObject(any(software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest.class)))
+        when(s3Presigner.presignGetObject(
+                any(software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest.class)))
                 .thenReturn(presignedRequest);
 
         String url = s3UploadService.generatePresignedGetUrl("test-key");

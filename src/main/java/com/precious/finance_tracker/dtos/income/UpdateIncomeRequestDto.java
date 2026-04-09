@@ -1,6 +1,5 @@
 package com.precious.finance_tracker.dtos.income;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

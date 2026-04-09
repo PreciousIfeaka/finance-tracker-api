@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.precious.finance_tracker.entities.User;
 import com.precious.finance_tracker.enums.Currency;
 import com.precious.finance_tracker.enums.Roles;
-import com.precious.finance_tracker.services.S3UploadService;
 import com.precious.finance_tracker.services.interfaces.IS3UploadService;
 import lombok.*;
 
@@ -46,8 +45,7 @@ public class UserResponseDto {
                 .avatarUrl(
                         user.getAvatarUrl() != null
                                 ? s3UploadService.generatePresignedGetUrl(user.getAvatarUrl())
-                                : null
-                )
+                                : null)
                 .role((user.getRole()))
                 .currency(user.getCurrency())
                 .isLimitExceeded(user.getLimitExceeded())

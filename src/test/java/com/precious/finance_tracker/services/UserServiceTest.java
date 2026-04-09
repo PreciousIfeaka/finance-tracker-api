@@ -114,7 +114,7 @@ class UserServiceTest {
         dto.setLastName("Doe");
         dto.setEmail("john.doe@test.com");
         dto.setPassword("password123");
-        dto.setConfirmPassword("password321"); // mismatch
+        dto.setConfirmPassword("password321");
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
@@ -125,12 +125,12 @@ class UserServiceTest {
     @Test
     void getUser_ShouldReturnUser_WhenValidEmailProvided() {
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(mockUser));
-        when(s3UploadService.generatePreSignedUrl(any())).thenReturn("http://s3.url");
+        when(s3UploadService.generatePresignedGetUrl(any())).thenReturn("http://s3.url");
 
         UserResponseDto result = userService.getUser("john@example.com");
 
         assertNotNull(result);
-        assertEquals("john@example.com", result.email());
+        assertEquals("john@example.com", result.getEmail());
     }
 
     @Test
@@ -144,13 +144,13 @@ class UserServiceTest {
     void getUsers_ShouldReturnPagedResponse() {
         Page<User> page = new PageImpl<>(List.of(mockUser));
         when(userRepository.findAll(any(PageRequest.class))).thenReturn(page);
-        when(s3UploadService.generatePreSignedUrl(any())).thenReturn("http://s3.url");
+        when(s3UploadService.generatePresignedGetUrl(any())).thenReturn("http://s3.url");
 
         PagedUserResponseDto result = userService.getUsers(0, 10);
 
         assertNotNull(result);
-        assertEquals(1, result.users().getTotalElements());
-        assertEquals("john@example.com", result.users().getContent().get(0).email());
+        assertEquals(1, result.getTotal());
+        assertEquals("john@example.com", result.getUsers().get(0).getEmail());
     }
 
     @Test
@@ -163,8 +163,7 @@ class UserServiceTest {
         BaseResponseDto<UserResponseDto> result = userService.updateUserDetails(dto);
 
         assertNotNull(result);
-        assertEquals("Success", result.getStatus()); // Note: UserService uses "Status", but Dto might be built differently. 
-        // We will assert user properties directly
+        assertEquals("Success", result.getStatus());
         verify(userRepository).save(mockUser);
         assertEquals("Jane Doe", mockUser.getName());
         assertEquals(Currency.USD, mockUser.getCurrency());
@@ -173,7 +172,7 @@ class UserServiceTest {
     @Test
     void changePassword_ShouldUpdatePassword() {
         mockAuthentication();
-        ChangePasswordDto dto = new ChangePasswordDto("oldPass", "newPass", "newPass"); // Although we only need new and confirm based on DTO structure
+        ChangePasswordDto dto = new ChangePasswordDto("newPass", "newPass");
 
         when(passwordEncoder.matches("newPass", "encoded_password")).thenReturn(false);
         when(passwordEncoder.encode("newPass")).thenReturn("new_encoded_password");
@@ -189,7 +188,7 @@ class UserServiceTest {
     @Test
     void changePassword_ShouldThrowBadRequest_WhenPasswordsMismatch() {
         mockAuthentication();
-        ChangePasswordDto dto = new ChangePasswordDto("oldPass", "newPass", "mismatchPass");
+        ChangePasswordDto dto = new ChangePasswordDto("newPass", "mismatchPass");
 
         assertThrows(BadRequestException.class, () -> userService.changePassword(dto));
         verify(userRepository, never()).save(any(User.class));

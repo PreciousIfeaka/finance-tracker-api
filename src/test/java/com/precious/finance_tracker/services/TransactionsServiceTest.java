@@ -116,9 +116,10 @@ class TransactionsServiceTest {
 
     @Test
     void updateTransaction_ShouldUpdateAndSave() {
-        UpdateTransactionDto dto = new UpdateTransactionDto();
-        dto.setAmount(BigDecimal.valueOf(150.00));
-        dto.setDescription("Updated Income");
+        UpdateTransactionDto dto = UpdateTransactionDto.builder()
+                .amount(BigDecimal.valueOf(150.00))
+                .description("Updated Income")
+                .build();
 
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
         when(transactionRepository.findByIdAndUserId(mockTransaction.getId(), mockUser.getId()))
@@ -140,22 +141,20 @@ class TransactionsServiceTest {
         Page<Transactions> page = new PageImpl<>(List.of(mockTransaction));
 
         when(transactionRepository.findByUserIdAndMonthAndDirection(
-                eq(mockUser.getId()), eq(month), eq(TransactionDirection.credit), any(PageRequest.class)
-        )).thenReturn(page);
+                eq(mockUser.getId()), eq(month), eq(TransactionDirection.credit), any(PageRequest.class)))
+                .thenReturn(page);
 
-        // Mock TransactionTotals interface behavior
         TransactionTotals totals = mock(TransactionTotals.class);
         when(totals.getCredit()).thenReturn(BigDecimal.valueOf(100.00));
         when(totals.getDebit()).thenReturn(BigDecimal.ZERO);
         when(transactionRepository.getTotalUserTransactionsAmount(mockUser.getId(), null, month)).thenReturn(totals);
 
         BaseResponseDto<PagedTransactionResponseDto> result = transactionsService.getFilteredTransactions(
-                1, 10, month, TransactionDirection.credit
-        );
+                1, 10, month, TransactionDirection.credit);
 
         assertEquals("Success", result.getStatus());
-        assertEquals(1, result.getData().transactions().getTotalElements());
-        assertEquals(BigDecimal.valueOf(100.00), result.getData().totalSum());
+        assertEquals(1, result.getData().getTotal());
+        assertEquals(BigDecimal.valueOf(100.00), result.getData().getBalance());
     }
 
     @Test
@@ -172,12 +171,11 @@ class TransactionsServiceTest {
 
     @Test
     void deleteTransactionsByIds_ShouldDeleteMultiple() {
-        DeleteByIdsDto dto = new DeleteByIdsDto();
-        dto.setIds(List.of(UUID.randomUUID(), UUID.randomUUID()));
+        DeleteByIdsDto dto = new DeleteByIdsDto(List.of(UUID.randomUUID(), UUID.randomUUID()));
 
         BaseResponseDto<Object> result = transactionsService.deleteTransactionsByIds(dto);
 
         assertEquals("Success", result.getStatus());
-        verify(transactionRepository).deleteAllById(dto.getIds());
+        verify(transactionRepository).deleteAllById(dto.ids());
     }
 }

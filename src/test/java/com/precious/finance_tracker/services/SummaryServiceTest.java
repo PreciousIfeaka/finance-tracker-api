@@ -25,7 +25,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -108,7 +107,7 @@ class SummaryServiceTest {
                 .amount(BigDecimal.valueOf(200))
                 .transactionDateTime(LocalDateTime.now().withDayOfMonth(5))
                 .build();
-        
+
         Expense expenseWeek3 = Expense.builder()
                 .amount(BigDecimal.valueOf(50))
                 .transactionDateTime(LocalDateTime.now().withDayOfMonth(18))
@@ -125,12 +124,12 @@ class SummaryServiceTest {
 
         assertEquals("Success", result.getStatus());
         List<WeeklySummaryDto> dtos = result.getData();
-        
+
         assertEquals(4, dtos.size());
         assertEquals(BigDecimal.valueOf(200), dtos.get(0).getIncome()); // Week 1 income
         assertEquals(BigDecimal.ZERO, dtos.get(0).getExpense());
-        
-        assertEquals(BigDecimal.ZERO, dtos.get(2).getIncome()); 
+
+        assertEquals(BigDecimal.ZERO, dtos.get(2).getIncome());
         assertEquals(BigDecimal.valueOf(50), dtos.get(2).getExpense()); // Week 3 expense
 
         for (WeeklySummaryDto dto : dtos) {

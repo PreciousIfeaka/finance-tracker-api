@@ -3,7 +3,6 @@ package com.precious.finance_tracker.services;
 import com.precious.finance_tracker.dtos.BaseResponseDto;
 import com.precious.finance_tracker.dtos.budget.*;
 import com.precious.finance_tracker.entities.Budget;
-import com.precious.finance_tracker.entities.Expense;
 import com.precious.finance_tracker.entities.Income;
 import com.precious.finance_tracker.entities.User;
 import com.precious.finance_tracker.enums.ExpenseCategory;
@@ -14,9 +13,7 @@ import com.precious.finance_tracker.repositories.BudgetRepository;
 import com.precious.finance_tracker.repositories.ExpenseRepository;
 import com.precious.finance_tracker.repositories.IncomeRepository;
 import com.precious.finance_tracker.services.interfaces.IBudgetService;
-import com.precious.finance_tracker.services.interfaces.IIncomeService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -233,7 +230,7 @@ public class BudgetService implements IBudgetService {
 
     @Transactional
     public BaseResponseDto<Object> deleteBudgetsByIds(DeleteByIdsDto dto) {
-        this.budgetRepository.deleteAllById(dto.getIds());
+        this.budgetRepository.deleteAllById(dto.ids());
 
         log.info("Successfully deleted selected budgets");
 

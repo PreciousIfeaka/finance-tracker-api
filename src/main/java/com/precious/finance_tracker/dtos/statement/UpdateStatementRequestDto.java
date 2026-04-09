@@ -1,7 +1,6 @@
 package com.precious.finance_tracker.dtos.statement;
 
 import com.precious.finance_tracker.types.DocumentUrls;
-import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

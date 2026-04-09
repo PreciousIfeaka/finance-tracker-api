@@ -1,7 +1,6 @@
 package com.precious.finance_tracker.services;
 
 import com.precious.finance_tracker.dtos.BaseResponseDto;
-import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.income.AddIncomeRequestDto;
 import com.precious.finance_tracker.dtos.income.MonthlyIncomeStatsResponseDto;
 import com.precious.finance_tracker.dtos.income.PagedIncomeResponseDto;
@@ -101,8 +100,8 @@ class IncomeServiceTest {
 
         Transactions mockTransaction = new Transactions();
         when(transactionRepository.findByUserIdAndAmountAndDirectionAndTransactionDateTimeAndDescription(
-                eq(mockUser.getId()), any(), eq(TransactionDirection.credit), any(), any()
-        )).thenReturn(Optional.of(mockTransaction));
+                eq(mockUser.getId()), any(), eq(TransactionDirection.credit), any(), any()))
+                .thenReturn(Optional.of(mockTransaction));
 
         when(incomeRepository.save(any(Income.class))).thenReturn(mockIncome);
 
@@ -117,7 +116,8 @@ class IncomeServiceTest {
     @Test
     void getIncomeById_ShouldReturnIncome() {
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        when(incomeRepository.findByIdAndUserId(mockIncome.getId(), mockUser.getId())).thenReturn(Optional.of(mockIncome));
+        when(incomeRepository.findByIdAndUserId(mockIncome.getId(), mockUser.getId()))
+                .thenReturn(Optional.of(mockIncome));
 
         BaseResponseDto<Income> result = incomeService.getIncomeById(mockIncome.getId());
 
@@ -140,21 +140,21 @@ class IncomeServiceTest {
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
         Page<Income> page = new PageImpl<>(List.of(mockIncome));
         when(incomeRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(
-                eq(mockUser.getId()), eq(month), any(PageRequest.class)
-        )).thenReturn(page);
+                eq(mockUser.getId()), eq(month), any(PageRequest.class))).thenReturn(page);
         when(incomeRepository.getTotalIncomeByMonth(mockUser.getId(), month)).thenReturn(BigDecimal.valueOf(500));
 
         BaseResponseDto<PagedIncomeResponseDto> result = incomeService.getAllIncomesByMonth(1, 10, month);
 
         assertEquals("Success", result.getStatus());
-        assertEquals(1, result.getData().incomes().getTotalElements());
-        assertEquals(BigDecimal.valueOf(500), result.getData().totalSum());
+        assertEquals(1, result.getData().getTotal());
+        assertEquals(BigDecimal.valueOf(500), result.getData().getTotalIncome());
     }
 
     @Test
     void deleteIncomeById_ShouldDeleteIncome() {
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        when(incomeRepository.findByIdAndUserId(mockIncome.getId(), mockUser.getId())).thenReturn(Optional.of(mockIncome));
+        when(incomeRepository.findByIdAndUserId(mockIncome.getId(), mockUser.getId()))
+                .thenReturn(Optional.of(mockIncome));
 
         BaseResponseDto<Object> result = incomeService.deleteIncomeById(mockIncome.getId());
 
@@ -165,14 +165,14 @@ class IncomeServiceTest {
     @Test
     void getMonthlyIncomeStats_ShouldReturnStats() {
         when(userService.getAuthenticatedUser()).thenReturn(mockUser);
-        
-        Object[] row1 = {YearMonth.now(), BigDecimal.valueOf(1000)};
-        when(incomeRepository.sumIncomeByMonth(mockUser.getId())).thenReturn(List.of(row1));
+
+        Object[] row1 = { YearMonth.now(), BigDecimal.valueOf(1000) };
+        when(incomeRepository.sumIncomeByMonth(mockUser.getId())).thenReturn(List.<Object[]>of(row1));
 
         BaseResponseDto<List<MonthlyIncomeStatsResponseDto>> result = incomeService.getMonthlyIncomeStats();
 
         assertEquals("Success", result.getStatus());
         assertEquals(1, result.getData().size());
-        assertEquals(BigDecimal.valueOf(1000), result.getData().get(0).amount());
+        assertEquals(BigDecimal.valueOf(1000), result.getData().get(0).total());
     }
 }

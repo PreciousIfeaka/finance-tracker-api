@@ -11,27 +11,20 @@ import com.precious.finance_tracker.entities.Income;
 import com.precious.finance_tracker.entities.Transactions;
 import com.precious.finance_tracker.entities.User;
 import com.precious.finance_tracker.enums.TransactionDirection;
-import com.precious.finance_tracker.exceptions.BadRequestException;
-import com.precious.finance_tracker.exceptions.ConflictResourceException;
-import com.precious.finance_tracker.exceptions.ForbiddenException;
 import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.repositories.IncomeRepository;
 import com.precious.finance_tracker.repositories.TransactionRepository;
 import com.precious.finance_tracker.services.interfaces.IIncomeService;
 import com.precious.finance_tracker.services.interfaces.ITransactionService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.*;
 
@@ -193,7 +186,7 @@ public class IncomeService implements IIncomeService {
 
     @Transactional
     public BaseResponseDto<Object> deleteIncomesByIds(DeleteByIdsDto dto) {
-        this.incomeRepository.deleteAllById(dto.getIds());
+        this.incomeRepository.deleteAllById(dto.ids());
 
         log.info("Successfully deleted selected incomes");
 
