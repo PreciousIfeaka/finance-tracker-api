@@ -3,6 +3,7 @@ package com.precious.finance_tracker.configurations;
 import com.precious.finance_tracker.exceptions.NotFoundException;
 import com.precious.finance_tracker.proxies.GeminiClientProxy;
 import com.precious.finance_tracker.repositories.UserRepository;
+import feign.Logger;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,5 +50,10 @@ public class ApplicationConfig {
     @Bean
     AuthenticationManager authManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    Logger.Level feignLoggerLevel() {
+        return Logger.Level.HEADERS;
     }
 }

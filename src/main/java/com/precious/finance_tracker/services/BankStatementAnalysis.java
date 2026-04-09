@@ -381,7 +381,7 @@ public class BankStatementAnalysis implements IBankStatementService {
     private GeminiRequest buildGeminiRequest(String promptText, DocumentUrls doc) {
         GeminiRequest.Part textPart = new GeminiRequest.Part();
         textPart.setText(promptText);
-        
+
         GeminiRequest.Part filePart = new GeminiRequest.Part();
         GeminiRequest.FileData fileData = new GeminiRequest.FileData();
         String url = this.s3UploadService.generatePresignedGetUrl(doc.getFileKey());
