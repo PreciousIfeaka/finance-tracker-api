@@ -11,6 +11,7 @@ public class GeminiResponse {
     @Data
     public static class Candidate {
         private Content content;
+        private String finishReason;
     }
     @Data
     public static class Content {

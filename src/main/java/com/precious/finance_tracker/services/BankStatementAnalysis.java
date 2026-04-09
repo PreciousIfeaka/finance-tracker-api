@@ -264,36 +264,39 @@ public class BankStatementAnalysis implements IBankStatementService {
 
         try {
             String promptText = """
-                    Assume the role of a meticulous bank statement analyzer with no room for mistakes.
-                    I have attached a maximum of 3 bank statement files to this prompt that might be \
-                    in different document formats (pdf, csv and excel). They are statements for a user over a given month \
-                    across the different banks the user uses. Extract all transactions from these statements,
-                    making sure to take note of personal inter-bank transfers and not consider them. Only consider transactions \
-                    that are going out or coming into the users accounts with similar names but not transactions between them.
-                    That means personal transfers should not be recorded.
-                    Make sure to return ONLY a raw JSON array (starting with [ and ending with ]) containing objects \
-                    with the following fields for each transaction:
-                     - datetime (transaction datetime in yyyy-MM-dd'T'HH:mm:ss format)
-                     - amount
-                     - category (for debits, it should be an enum of the following: food, clothing, housing,
-                        entertainment, utilities, transportation, healthcare, grooming, tax, education, gifting,
-                        miscellaneous, bill, personal, shopping.
-                        While for credits, this will be the source of income, you can decide to use any reasonable short \
-                        text of choice obtained from the transaction details. You can generally use 'salary', 'gifting', etc).
-                        Try your best possible to determine the category from all details of the transaction,
-                        If you cannot determine it, mark it as miscellaneous. For money lent out to someone or given to \
-                        someone, it should be categorized as bill. If money is sent to someone's account and the person \
-                        refunds same amount, do not record it since it cancels out.
-                     - note (this is the transaction description).
-                     - direction (enum of 'credit' or 'debit')
-                    For an Opay bank statement, there are usually two sections or more, Wallet Account and Saving Account.
-                    Only consider the wallet Account and disregard the Savings Account. Also, if an Owealth transaction \
-                    of a particular amount comes immediately before or after a transaction of the same amount, disregard the \
-                    Owealth entry and only consider the main transaction.
-                    For the tax or interest category, either credit or debit, accumulate all transaction charges, tax or interest and \
-                    ONLY return one record indicating the sum. Do this also to anything that seem like bonus on the income.
-                    Do NOT include markdowns, backticks or explanations as the response will be parsed with jackson.
-                    """;
+                # ROLE
+                Act as a high-precision financial data extractor. Output ONLY minified JSON.
+                
+                # TASK
+                Extract transactions from the attached bank statements (PDF/CSV/Excel).
+                Consolidate multiple bank statements into a single timeline.
+                
+                # FILTERING RULES
+                1. EXCLUDE Personal Transfers: Ignore transfers between the user's own accounts (same name/inter-bank).
+                2. EXCLUDE Refunds: If a debit is followed by an identical credit refund, ignore both.
+                3. OPAY SPECIFIC: Process 'Wallet Account' only. IGNORE 'Savings Account'. If an 'Owealth' entry \
+                   mirrors an immediate main transaction amount exactly, ignore the Owealth entry.
+                4. AGGREGATION: Sum all transaction charges, taxes, interest, or bonuses. Return ONLY one record \
+                   for each aggregate type.
+                
+                # CATEGORIZATION
+                - DEBITS: Use ONLY: [food, clothing, housing, entertainment, utilities, transportation, healthcare,
+                  grooming, tax, education, gifting, miscellaneous, bill, personal, shopping].
+                - LENDING: Categorize as 'bill'.
+                - CREDITS: Use short descriptive text (e.g., 'salary', 'gifting', 'refund').
+                - FALLBACK: Use 'miscellaneous' if uncertain, for both credit or debit.
+                
+                # OUTPUT FORMAT
+                Return ONLY a raw JSON array. No markdowns, no backticks, no preamble.
+                Example: [{"dt":"2026-04-09T10:00:00","amt":5000.0,"cat":"food","note":"Mama Put","dir":"debit"}]
+                
+                # DATA SCHEMA
+                - dt: ISO8601 (yyyy-MM-dd'T'HH:mm:ss)
+                - amt: numeric
+                - cat: string (enum for debits)
+                - note: original description
+                - dir: 'credit' or 'debit'
+                """;
 
             GeminiRequest geminiRequest = this.buildGeminiRequest(promptText, bankStatement);
             GeminiResponse geminiResponse = this.geminiClientProxy.analyzeStatement(
@@ -301,7 +304,13 @@ public class BankStatementAnalysis implements IBankStatementService {
                     geminiRequest
             );
 
-            String rawJson = geminiResponse.getCandidates().get(0).getContent().getParts().get(0).getText();
+            GeminiResponse.Candidate candidate = geminiResponse.getCandidates().get(0);
+
+            if (!"STOP".equalsIgnoreCase(candidate.getFinishReason())) {
+                log.error("Gemini did not finish correctly. Reason: {}", candidate.getFinishReason());
+            }
+
+            String rawJson = candidate.getContent().getParts().get(0).getText();
             String cleanJson = rawJson.replaceAll("```json|```", "").trim();
 
             List<GeminiTransactionResponseDto> transactions = this.deserializeGeminiResponseToDto(
@@ -363,11 +372,12 @@ public class BankStatementAnalysis implements IBankStatementService {
         content.setParts(parts);
         content.setRole("user");
 
-        GeminiRequest request = new GeminiRequest();
-        request.setContents(List.of(content));
-
         GeminiRequest.GenerationConfig config = new GeminiRequest.GenerationConfig();
         config.setResponseMimeType("application/json");
+        config.setMaxOutputTokens(8192);
+
+        GeminiRequest request = new GeminiRequest();
+        request.setContents(List.of(content));
         request.setGenerationConfig(config);
 
         return request;
