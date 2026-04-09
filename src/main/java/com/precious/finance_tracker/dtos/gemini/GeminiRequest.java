@@ -1,5 +1,6 @@
 package com.precious.finance_tracker.dtos.gemini;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,14 @@ import java.util.List;
 @AllArgsConstructor
 public class GeminiRequest {
     private List<Content> contents;
+
+    private GenerationConfig generationConfig;
+
+    @Data
+    public static class GenerationConfig {
+        @JsonProperty("response_mime_type")
+        private String responseMimeType;
+    }
 
     @Data
     public static class Content {

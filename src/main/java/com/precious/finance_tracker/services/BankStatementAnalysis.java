@@ -2,7 +2,9 @@ package com.precious.finance_tracker.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.precious.finance_tracker.dtos.BaseResponseDto;
 import com.precious.finance_tracker.dtos.email.NotifyStatementProcessingResultDto;
 import com.precious.finance_tracker.dtos.gemini.GeminiRequest;
@@ -269,7 +271,8 @@ public class BankStatementAnalysis implements IBankStatementService {
                     making sure to take note of personal inter-bank transfers and not consider them. Only consider transactions \
                     that are going out or coming into the users accounts with similar names but not transactions between them.
                     That means personal transfers should not be recorded.
-                    Make sure to return ONLY a raw list of JSON with the following fields for each transaction:
+                    Make sure to return ONLY a raw JSON array (starting with [ and ending with ]) containing objects \
+                    with the following fields for each transaction:
                      - datetime (transaction datetime in yyyy-MM-dd'T'HH:mm:ss format)
                      - amount
                      - category (for debits, it should be an enum of the following: food, clothing, housing,
@@ -363,6 +366,10 @@ public class BankStatementAnalysis implements IBankStatementService {
         GeminiRequest request = new GeminiRequest();
         request.setContents(List.of(content));
 
+        GeminiRequest.GenerationConfig config = new GeminiRequest.GenerationConfig();
+        config.setResponseMimeType("application/json");
+        request.setGenerationConfig(config);
+
         return request;
     }
 
@@ -413,12 +420,28 @@ public class BankStatementAnalysis implements IBankStatementService {
     private List<GeminiTransactionResponseDto> deserializeGeminiResponseToDto(
             String geminiResponse
     ) throws JsonProcessingException {
+        JsonNode rootNode = objectMapper.readTree(geminiResponse);
 
-        return this.objectMapper.readValue(
-                geminiResponse,
-                new TypeReference<>() {
+        if (rootNode.isArray()) {
+            return objectMapper.convertValue(rootNode, new TypeReference<>() {
+            });
+        }
+
+        if (rootNode.isObject()) {
+            Iterator<JsonNode> elements = rootNode.elements();
+            while (elements.hasNext()) {
+                JsonNode node = elements.next();
+                if (node.isArray()) {
+                    return objectMapper.convertValue(node, new TypeReference<>() {
+                    });
                 }
-        );
+            }
+        }
+
+        throw MismatchedInputException.from(
+                null,
+                GeminiTransactionResponseDto.class,
+                "Could not find a JSON array in Gemini response");
     }
 
     private void validateTransaction(GeminiTransactionResponseDto t) {
