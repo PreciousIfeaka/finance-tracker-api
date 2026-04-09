@@ -17,14 +17,14 @@ class JwtServiceTest {
 
     private JwtService jwtService;
 
-    // Minimum 256-bit secret key for HMAC-SHA256 Base64URL encoded
-    private final String testSecretKey = "4xS7a4XzYxJ4Qj7N5gV3qE2wH5yL8vB6xZ1cM7pK9tU=";
-    private final long testJwtExpiry = 3600000; // 1 hour
-
     @BeforeEach
     void setUp() {
         jwtService = new JwtService();
+        // Minimum 256-bit secret key for HMAC-SHA256 Base64URL encoded
+        String testSecretKey = "4xS7a4XzYxJ4Qj7N5gV3qE2wH5yL8vB6xZ1cM7pK9tU=";
         ReflectionTestUtils.setField(jwtService, "secretKey", testSecretKey);
+
+        long testJwtExpiry = 3600000;
         ReflectionTestUtils.setField(jwtService, "jwtExpiry", testJwtExpiry);
     }
 
@@ -33,7 +33,7 @@ class JwtServiceTest {
         String token = jwtService.generateToken("user@test.com");
 
         assertNotNull(token);
-        assertTrue(token.split("\\.").length == 3); // Basic structure check
+        assertEquals(3, token.split("\\.").length); // Basic structure check
     }
 
     @Test

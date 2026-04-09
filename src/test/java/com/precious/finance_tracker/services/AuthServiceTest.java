@@ -6,7 +6,6 @@ import com.precious.finance_tracker.dtos.auth.*;
 import com.precious.finance_tracker.dtos.email.VerifyEmailDto;
 import com.precious.finance_tracker.dtos.user.UserResponseDto;
 import com.precious.finance_tracker.entities.User;
-import com.precious.finance_tracker.enums.EmailPurpose;
 import com.precious.finance_tracker.exceptions.BadRequestException;
 import com.precious.finance_tracker.exceptions.ForbiddenException;
 import com.precious.finance_tracker.repositories.UserRepository;
@@ -86,7 +85,6 @@ class AuthServiceTest {
         dto.setEmail("jane@example.com");
 
         when(userService.createUser(dto)).thenReturn(mockUser);
-        when(s3UploadService.generatePresignedGetUrl(any())).thenReturn("http://s3.url");
 
         BaseResponseDto<UserResponseDto> result = authService.registerUser(dto);
 
@@ -142,7 +140,6 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail("jane@example.com")).thenReturn(Optional.of(mockUser));
         when(jwtService.generateToken("jane@example.com")).thenReturn("access_token");
-        when(s3UploadService.generatePresignedGetUrl(any())).thenReturn("http://s3.url");
 
         BaseResponseDto<AuthResponseDto> result = authService.verifyOtp(dto);
 

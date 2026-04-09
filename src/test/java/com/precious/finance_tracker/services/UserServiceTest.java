@@ -125,7 +125,6 @@ class UserServiceTest {
     @Test
     void getUser_ShouldReturnUser_WhenValidEmailProvided() {
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(mockUser));
-        when(s3UploadService.generatePresignedGetUrl(any())).thenReturn("http://s3.url");
 
         UserResponseDto result = userService.getUser("john@example.com");
 
@@ -144,7 +143,6 @@ class UserServiceTest {
     void getUsers_ShouldReturnPagedResponse() {
         Page<User> page = new PageImpl<>(List.of(mockUser));
         when(userRepository.findAll(any(PageRequest.class))).thenReturn(page);
-        when(s3UploadService.generatePresignedGetUrl(any())).thenReturn("http://s3.url");
 
         PagedUserResponseDto result = userService.getUsers(0, 10);
 

@@ -3,7 +3,6 @@ package com.precious.finance_tracker.services;
 import com.precious.finance_tracker.dtos.email.NotifyStatementProcessingResultDto;
 import com.precious.finance_tracker.dtos.email.VerifyEmailDto;
 import com.precious.finance_tracker.enums.EmailPurpose;
-import com.precious.finance_tracker.exceptions.InternalServerError;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.jobrunr.jobs.lambdas.JobLambda;
@@ -73,7 +72,7 @@ class EmailServiceTest {
     }
 
     @Test
-    void buildAndSendOtpEmail_ShouldThrowInternalServerError_WhenMessagingException() throws MessagingException {
+    void buildAndSendOtpEmail_ShouldPropagateException_WhenSendFails() throws MessagingException {
         VerifyEmailDto dto = VerifyEmailDto.builder()
                 .firstName("John")
                 .recipientEmail("john@example.com")
@@ -84,9 +83,9 @@ class EmailServiceTest {
         MimeMessage mockMimeMessage = mock(MimeMessage.class);
         when(javaMailSender.createMimeMessage()).thenReturn(mockMimeMessage);
         when(templateEngine.process(anyString(), any(Context.class))).thenReturn("<html>Email Content</html>");
-        doThrow(new RuntimeException("Mail Ex")).when(javaMailSender).send(any(MimeMessage.class));
+        doThrow(new RuntimeException("Mail send failed")).when(javaMailSender).send(any(MimeMessage.class));
 
-        assertThrows(InternalServerError.class, () -> emailService.buildAndSendOtpEmail(dto));
+        assertThrows(RuntimeException.class, () -> emailService.buildAndSendOtpEmail(dto));
     }
 
     @Test

@@ -279,6 +279,7 @@ public class BankStatementAnalysis implements IBankStatementService {
 
                 GeminiResponse.Candidate candidate = geminiResponse.getCandidates().get(0);
 
+                log.info(candidate.getContent().getParts().get(0).getText());
                 if (!"STOP".equalsIgnoreCase(candidate.getFinishReason())) {
                     log.warn(
                             "Gemini did not finish correctly for doc: {}. Reason: {}",

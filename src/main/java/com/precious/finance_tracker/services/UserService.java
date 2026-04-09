@@ -118,7 +118,7 @@ public class UserService implements IUserService {
 
         log.info("Successfully updated user info for {}", user.getEmail());
         return BaseResponseDto.<UserResponseDto>builder()
-                .status("Status")
+                .status("Success")
                 .message("Successfully updated user profile")
                 .data(UserResponseDto.fromEntity(savedUser, s3UploadService))
                 .build();

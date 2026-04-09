@@ -146,7 +146,6 @@ class TransactionsServiceTest {
 
         TransactionTotals totals = mock(TransactionTotals.class);
         when(totals.getCredit()).thenReturn(BigDecimal.valueOf(100.00));
-        when(totals.getDebit()).thenReturn(BigDecimal.ZERO);
         when(transactionRepository.getTotalUserTransactionsAmount(mockUser.getId(), null, month)).thenReturn(totals);
 
         BaseResponseDto<PagedTransactionResponseDto> result = transactionsService.getFilteredTransactions(
