@@ -263,42 +263,11 @@ public class BankStatementAnalysis implements IBankStatementService {
                 .orElseThrow(() -> new NotFoundException("Statement not found"));
 
         try {
-            String promptText = """
-                # ROLE
-                Act as a high-precision financial data extractor. Output ONLY minified JSON.
-                
-                # TASK
-                Extract transactions from the attached bank statements (PDF/CSV/Excel).
-                Consolidate multiple bank statements into a single timeline.
-                
-                # FILTERING RULES
-                1. EXCLUDE Personal Transfers: Ignore transfers between the user's own accounts (same name/inter-bank).
-                2. EXCLUDE Refunds: If a debit is followed by an identical credit refund, ignore both.
-                3. OPAY SPECIFIC: Process 'Wallet Account' only. IGNORE 'Savings Account'. If an 'Owealth' entry \
-                   mirrors an immediate main transaction amount exactly, ignore the Owealth entry.
-                4. AGGREGATION: Sum all transaction charges, taxes, interest, or bonuses. Return ONLY one record \
-                   for each aggregate type.
-                
-                # CATEGORIZATION
-                - DEBITS: Use ONLY: [food, clothing, housing, entertainment, utilities, transportation, healthcare,
-                  grooming, tax, education, gifting, miscellaneous, bill, personal, shopping].
-                - LENDING: Categorize as 'bill'.
-                - CREDITS: Use short descriptive text (e.g., 'salary', 'gifting', 'refund').
-                - FALLBACK: Use 'miscellaneous' if uncertain, for both credit or debit.
-                
-                # OUTPUT FORMAT
-                Return ONLY a raw JSON array. No markdowns, no backticks, no preamble.
-                Example: [{"dt":"2026-04-09T10:00:00","amt":5000.0,"cat":"food","note":"Mama Put","dir":"debit"}]
-                
-                # DATA SCHEMA
-                - dt: ISO8601 (yyyy-MM-dd'T'HH:mm:ss)
-                - amt: numeric
-                - cat: string (enum for debits)
-                - note: original description
-                - dir: 'credit' or 'debit'
-                """;
+            log.info("Starting statement processing...");
 
-            GeminiRequest geminiRequest = this.buildGeminiRequest(promptText, bankStatement);
+            String formattedText = getPrompt(bankStatement.getMonth());
+
+            GeminiRequest geminiRequest = this.buildGeminiRequest(formattedText, bankStatement);
             GeminiResponse geminiResponse = this.geminiClientProxy.analyzeStatement(
                     this.geminiApiKey,
                     geminiRequest
@@ -312,6 +281,7 @@ public class BankStatementAnalysis implements IBankStatementService {
 
             String rawJson = candidate.getContent().getParts().get(0).getText();
             String cleanJson = rawJson.replaceAll("```json|```", "").trim();
+            log.debug(cleanJson);
 
             List<GeminiTransactionResponseDto> transactions = this.deserializeGeminiResponseToDto(
                     cleanJson
@@ -344,6 +314,49 @@ public class BankStatementAnalysis implements IBankStatementService {
                             .build()
             );
         }
+    }
+
+    private static String getPrompt(YearMonth month) {
+        String promptText = """
+            # ROLE
+            Act as a high-precision financial data extractor. Output ONLY minified JSON.
+            
+            # TASK
+            Extract transactions from the attached bank statements (PDF/CSV/Excel).
+            ONLY extract transactions for the month %s. Ignore all other months.
+            IF there are no transactions for the selected month, throw an error with the reason.
+            Consolidate multiple bank statements into a single timeline.
+            
+            # FILTERING RULES
+            1. EXCLUDE Personal Transfers: Ignore transfers between the user's own accounts (same name/inter-bank).
+            2. EXCLUDE Refunds: If a debit is followed by an identical credit refund, ignore both.
+            3. OPAY SPECIFIC: Process 'Wallet Account' only. IGNORE 'Savings Account'. If an 'Owealth' entry \
+               mirrors an immediate main transaction amount exactly, ignore the Owealth entry.
+            4. AGGREGATION: Sum all transaction charges, taxes, interest, or bonuses. Return ONLY one record \
+               for each aggregate type.
+            
+            # CATEGORIZATION
+            - DEBITS: Use ONLY: [food, clothing, housing, entertainment, utilities, transportation, healthcare,
+              grooming, tax, education, gifting, miscellaneous, bill, personal, shopping].
+            - LENDING: Categorize as 'bill'.
+            - CREDITS: Use short descriptive text (e.g., 'salary', 'gifting', 'refund').
+            - FALLBACK: Use 'miscellaneous' if uncertain, for both credit or debit.
+            
+            # OUTPUT FORMAT
+            Return ONLY a minified JSON array. NO whitespace, NO newlines, NO indentation, No markdowns,
+            NO backticks, NO preamble.
+            Use the exact short keys: "dt", "amt", "cat", "note", "dir".
+            Example: [{"dt":"2026-04-09T10:00:00","amt":5000.0,"cat":"food","note":"Mama Put","dir":"debit"}]
+            
+            # DATA SCHEMA
+            - dt: ISO8601 (yyyy-MM-dd'T'HH:mm:ss)
+            - amt: numeric
+            - cat: string (enum for debits)
+            - note: original description
+            - dir: 'credit' or 'debit'
+            """;
+
+        return String.format(promptText, month);
     }
 
     private GeminiRequest buildGeminiRequest(String promptText, BankStatement bankStatement) {
