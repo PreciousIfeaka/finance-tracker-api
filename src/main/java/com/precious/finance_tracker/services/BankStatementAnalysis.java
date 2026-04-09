@@ -452,6 +452,7 @@ public class BankStatementAnalysis implements IBankStatementService {
     private List<GeminiTransactionResponseDto> deserializeGeminiResponseToDto(
             String geminiResponse
     ) throws JsonProcessingException {
+        log.debug(geminiResponse);
         JsonNode rootNode = objectMapper.readTree(geminiResponse);
 
         if (rootNode.isArray()) {
