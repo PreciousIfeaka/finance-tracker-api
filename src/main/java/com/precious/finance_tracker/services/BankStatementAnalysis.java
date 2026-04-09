@@ -294,7 +294,7 @@ public class BankStatementAnalysis implements IBankStatementService {
                 );
                 allTransactions.addAll(transactions);
 
-                Thread.sleep(2000);
+                Thread.sleep(3000);
             } catch (Exception e) {
                 log.error("Failed to process document: {}", doc.getFileKey(), e);
                 hasError = true;
