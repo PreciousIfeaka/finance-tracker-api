@@ -293,6 +293,8 @@ public class BankStatementAnalysis implements IBankStatementService {
                         cleanJson
                 );
                 allTransactions.addAll(transactions);
+
+                Thread.sleep(2000);
             } catch (Exception e) {
                 log.error("Failed to process document: {}", doc.getFileKey(), e);
                 hasError = true;
