@@ -175,4 +175,56 @@ class IncomeServiceTest {
         assertEquals(1, result.getData().size());
         assertEquals(BigDecimal.valueOf(1000), result.getData().get(0).total());
     }
+
+    @Test
+    void getIncomesForChart_ShouldReturnIncomes_ForMonth() {
+        YearMonth month = YearMonth.of(2026, 4);
+        when(userService.getAuthenticatedUser()).thenReturn(mockUser);
+        when(incomeRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(
+                mockUser.getId(), month))
+                .thenReturn(List.of(mockIncome));
+
+        BaseResponseDto<List<Income>> result = incomeService.getIncomesForChart(month, null);
+
+        assertEquals("Success", result.getStatus());
+        assertEquals(1, result.getData().size());
+        assertEquals(mockIncome.getId(), result.getData().get(0).getId());
+        verify(incomeRepository).findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(mockUser.getId(), month);
+        verify(incomeRepository, never()).findAllByUserIdAndYear(any(), anyInt());
+    }
+
+    @Test
+    void getIncomesForChart_ShouldReturnIncomes_ForYear() {
+        int year = 2026;
+        Income secondIncome = Income.builder()
+                .id(UUID.randomUUID())
+                .amount(BigDecimal.valueOf(800))
+                .month(YearMonth.of(2026, 3))
+                .user(mockUser)
+                .build();
+
+        when(userService.getAuthenticatedUser()).thenReturn(mockUser);
+        when(incomeRepository.findAllByUserIdAndYear(mockUser.getId(), year))
+                .thenReturn(List.of(mockIncome, secondIncome));
+
+        BaseResponseDto<List<Income>> result = incomeService.getIncomesForChart(null, year);
+
+        assertEquals("Success", result.getStatus());
+        assertEquals(2, result.getData().size());
+        verify(incomeRepository).findAllByUserIdAndYear(mockUser.getId(), year);
+        verify(incomeRepository, never()).findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(any(), any());
+    }
+
+    @Test
+    void getIncomesForChart_ShouldDefaultToCurrentMonth_WhenBothParamsNull() {
+        when(userService.getAuthenticatedUser()).thenReturn(mockUser);
+        when(incomeRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(
+                eq(mockUser.getId()), any(YearMonth.class)))
+                .thenReturn(List.of(mockIncome));
+
+        BaseResponseDto<List<Income>> result = incomeService.getIncomesForChart(null, null);
+
+        assertEquals("Success", result.getStatus());
+        assertEquals(1, result.getData().size());
+    }
 }

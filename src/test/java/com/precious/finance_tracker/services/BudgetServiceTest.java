@@ -212,4 +212,55 @@ class BudgetServiceTest {
                 verify(budgetRepository).deleteById(mockBudget.getId());
         }
 
+        @Test
+        void getBudgetsByCategory_ShouldReturnAggregates_ForMonth() {
+                YearMonth month = YearMonth.of(2026, 4);
+                Object[] row = { ExpenseCategory.food, BigDecimal.valueOf(500.00), 0 };
+                when(userService.getAuthenticatedUser()).thenReturn(mockUser);
+                when(budgetRepository.sumBudgetGroupedByCategoryAndMonth(mockUser.getId(), month))
+                                .thenReturn(List.<Object[]>of(row));
+
+                BaseResponseDto<List<BudgetByCategoryDto>> result = budgetService.getBudgetsByCategory(month, null);
+
+                assertEquals("Success", result.getStatus());
+                assertEquals(1, result.getData().size());
+                assertEquals(ExpenseCategory.food, result.getData().get(0).category());
+                assertEquals(BigDecimal.valueOf(500.00), result.getData().get(0).total());
+                assertFalse(result.getData().get(0).isExceeded());
+                verify(budgetRepository).sumBudgetGroupedByCategoryAndMonth(mockUser.getId(), month);
+                verify(budgetRepository, never()).sumBudgetGroupedByCategoryAndYear(any(), anyInt());
+        }
+
+        @Test
+        void getBudgetsByCategory_ShouldReturnAggregates_ForYear_WithExceededFlag() {
+                int year = 2026;
+                Object[] row1 = { ExpenseCategory.bill, BigDecimal.valueOf(1200.00), 1 };
+                Object[] row2 = { ExpenseCategory.entertainment, BigDecimal.valueOf(400.00), 0 };
+                when(userService.getAuthenticatedUser()).thenReturn(mockUser);
+                when(budgetRepository.sumBudgetGroupedByCategoryAndYear(mockUser.getId(), year))
+                                .thenReturn(List.<Object[]>of(row1, row2));
+
+                BaseResponseDto<List<BudgetByCategoryDto>> result = budgetService.getBudgetsByCategory(null, year);
+
+                assertEquals("Success", result.getStatus());
+                assertEquals(2, result.getData().size());
+                assertTrue(result.getData().get(0).isExceeded(), "bill should be exceeded");
+                assertFalse(result.getData().get(1).isExceeded(), "entertainment should not be exceeded");
+                verify(budgetRepository).sumBudgetGroupedByCategoryAndYear(mockUser.getId(), year);
+                verify(budgetRepository, never()).sumBudgetGroupedByCategoryAndMonth(any(), any());
+        }
+
+        @Test
+        void getBudgetsByCategory_ShouldDefaultToCurrentMonth_WhenBothParamsNull() {
+                Object[] row = { ExpenseCategory.food, BigDecimal.valueOf(300.00), 0 };
+                when(userService.getAuthenticatedUser()).thenReturn(mockUser);
+                when(budgetRepository.sumBudgetGroupedByCategoryAndMonth(
+                                eq(mockUser.getId()), any(YearMonth.class)))
+                                .thenReturn(List.<Object[]>of(row));
+
+                BaseResponseDto<List<BudgetByCategoryDto>> result = budgetService.getBudgetsByCategory(null, null);
+
+                assertEquals("Success", result.getStatus());
+                assertEquals(1, result.getData().size());
+        }
 }

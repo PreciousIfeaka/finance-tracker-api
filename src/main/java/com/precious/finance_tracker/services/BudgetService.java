@@ -267,8 +267,39 @@ public class BudgetService implements IBudgetService {
                         user.getId(), month
                 );
     }
+
+    public BaseResponseDto<List<BudgetByCategoryDto>> getBudgetsByCategory(
+            YearMonth month, Integer year) {
+        User user = this.userService.getAuthenticatedUser();
+
+        List<Object[]> results;
+
+        if (year != null) {
+            results = this.budgetRepository
+                    .sumBudgetGroupedByCategoryAndYear(user.getId(), year);
+        } else {
+            results = this.budgetRepository
+                    .sumBudgetGroupedByCategoryAndMonth(
+                            user.getId(),
+                            month != null ? month : YearMonth.now());
+        }
+
+        List<BudgetByCategoryDto> data = results.stream()
+                .map(row -> new BudgetByCategoryDto(
+                        (ExpenseCategory) row[0],
+                        (BigDecimal) row[1],
+                        ((Number) row[2]).intValue() == 1))
+                .toList();
+
+        log.info("Successfully retrieved budgets by category for user {}", user.getEmail());
+        return BaseResponseDto.<List<BudgetByCategoryDto>>builder()
+                .status("Success")
+                .message("Successfully retrieved budgets by category")
+                .data(data)
+                .build();
+    }
 }
 
 // To Do
 // Check budget-expense relationship
-// If there is a budget for an expense, track both, if not, allow.
+// If there is a budget for an expense, track both. If not, allow.

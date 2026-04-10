@@ -24,4 +24,6 @@ public interface IBudgetService {
     BaseResponseDto<Object> deleteBudgetsByIds(DeleteByIdsDto dto);
 
     BaseResponseDto<List<MonthlyBudgetStatsResponseDto>> getMonthlyBudgetStats();
+
+    BaseResponseDto<List<BudgetByCategoryDto>> getBudgetsByCategory(YearMonth month, Integer year);
 }

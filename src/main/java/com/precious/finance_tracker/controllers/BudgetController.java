@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
@@ -23,77 +22,74 @@ import java.util.UUID;
 @Tag(name = "Budgets")
 @SecurityRequirement(name = "bearerAuth")
 public class BudgetController {
-    private final IBudgetService budgetService;
+        private final IBudgetService budgetService;
 
-    @PostMapping()
-    public ResponseEntity<BaseResponseDto<Budget>> addBudget(
-            @RequestBody CreateBudgetRequestDto dto
-    ) {
-        return ResponseEntity.
-                status(HttpStatus.CREATED)
-                .body(this.budgetService.createBudget(dto));
-    }
+        @PostMapping()
+        public ResponseEntity<BaseResponseDto<Budget>> addBudget(
+                        @RequestBody CreateBudgetRequestDto dto) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(this.budgetService.createBudget(dto));
+        }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Budget>> updateBudget(
-            @PathVariable("id") UUID id,
-            @RequestBody UpdateBudgetRequestDto dto
-            ) {
-        return ResponseEntity
-                .ok(this.budgetService.updateBudget(id, dto));
-    }
+        @PutMapping("/{id}")
+        public ResponseEntity<BaseResponseDto<Budget>> updateBudget(
+                        @PathVariable("id") UUID id,
+                        @RequestBody UpdateBudgetRequestDto dto) {
+                return ResponseEntity
+                                .ok(this.budgetService.updateBudget(id, dto));
+        }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Budget>> getBudget(
-            @PathVariable("id") UUID id
-    ) {
-        return ResponseEntity.ok(this.budgetService.getBudget(id));
-    }
+        @GetMapping("/{id}")
+        public ResponseEntity<BaseResponseDto<Budget>> getBudget(
+                        @PathVariable("id") UUID id) {
+                return ResponseEntity.ok(this.budgetService.getBudget(id));
+        }
 
-    @GetMapping("/month")
-    public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgetsByMonth(
-            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
-            @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
-            ) {
-        YearMonth defaultMonth = YearMonth.now();
+        @GetMapping("/month")
+        public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgetsByMonth(
+                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+                        @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+                        @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
+                YearMonth defaultMonth = YearMonth.now();
 
-        return ResponseEntity.ok(
-                this.budgetService.getAllBudgetsByMonth(
-                        page, limit, month != null ? month : defaultMonth
-                )
-        );
-    }
+                return ResponseEntity.ok(
+                                this.budgetService.getAllBudgetsByMonth(
+                                                page, limit, month != null ? month : defaultMonth));
+        }
 
-    @GetMapping()
-    public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgets(
-            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit
-    ) {
+        @GetMapping()
+        public ResponseEntity<BaseResponseDto<PagedBudgetResponseDto>> getAllBudgets(
+                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+                        @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit) {
 
-        return ResponseEntity.ok(
-                this.budgetService.getAllBudgets(page, limit)
-        );
-    }
+                return ResponseEntity.ok(
+                                this.budgetService.getAllBudgets(page, limit));
+        }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Object>> deleteBudget(
-            @PathVariable("id") UUID id
-    ) {
-        return ResponseEntity.ok(this.budgetService.deleteBudgetById(id));
-    }
+        @DeleteMapping("/{id}")
+        public ResponseEntity<BaseResponseDto<Object>> deleteBudget(
+                        @PathVariable("id") UUID id) {
+                return ResponseEntity.ok(this.budgetService.deleteBudgetById(id));
+        }
 
-    @DeleteMapping("/selected")
-    public ResponseEntity<BaseResponseDto<Object>> deleteBudgetsByIds(
-            @RequestBody DeleteByIdsDto dto
-    ) {
-        return ResponseEntity.ok(this.budgetService.deleteBudgetsByIds(dto));
-    }
+        @DeleteMapping("/selected")
+        public ResponseEntity<BaseResponseDto<Object>> deleteBudgetsByIds(
+                        @RequestBody DeleteByIdsDto dto) {
+                return ResponseEntity.ok(this.budgetService.deleteBudgetsByIds(dto));
+        }
 
-    @GetMapping("/monthly-totals")
-    public ResponseEntity<BaseResponseDto<List<MonthlyBudgetStatsResponseDto>>> getMonthlyTotals() {
-        return ResponseEntity.ok(
-                this.budgetService.getMonthlyBudgetStats()
-        );
-    }
+        @GetMapping("/monthly-totals")
+        public ResponseEntity<BaseResponseDto<List<MonthlyBudgetStatsResponseDto>>> getMonthlyTotals() {
+                return ResponseEntity.ok(
+                                this.budgetService.getMonthlyBudgetStats());
+        }
+
+        @GetMapping("/by-category")
+        public ResponseEntity<BaseResponseDto<List<BudgetByCategoryDto>>> getBudgetsByCategory(
+                        @RequestParam(value = "month", required = false)
+                        @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
+                        @RequestParam(value = "year", required = false) Integer year) {
+                return ResponseEntity.ok(
+                                this.budgetService.getBudgetsByCategory(month, year));
+        }
 }

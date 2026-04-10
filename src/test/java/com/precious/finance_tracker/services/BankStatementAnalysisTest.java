@@ -137,7 +137,7 @@ class BankStatementAnalysisTest {
     }
 
     @Test
-    void addBankStatement_ShouldThrowBadRequest_WhenMoreThan4Docs() {
+    void addBankStatement_ShouldThrowBadRequest_WhenMoreThan3Docs() {
         CreateStatementRequestDto dto = new CreateStatementRequestDto();
         dto.setMonth(YearMonth.now());
         dto.setDocumentUrls(List.of(

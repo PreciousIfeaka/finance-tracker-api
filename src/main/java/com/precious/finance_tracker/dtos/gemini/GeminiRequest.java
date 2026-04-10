@@ -19,9 +19,6 @@ public class GeminiRequest {
     public static class GenerationConfig {
         @JsonProperty("response_mime_type")
         private String responseMimeType;
-
-        @JsonProperty("max_output_tokens")
-        private Integer maxOutputTokens;
     }
 
     @Data

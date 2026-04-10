@@ -11,14 +11,12 @@ import com.precious.finance_tracker.services.IncomeService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
@@ -29,77 +27,73 @@ import java.util.UUID;
 @Tag(name = "Incomes")
 @SecurityRequirement(name = "bearerAuth")
 public class IncomeController {
-    private final IncomeService incomeService;
+        private final IncomeService incomeService;
 
-    @PostMapping()
-    public ResponseEntity<BaseResponseDto<Income>> addIncome(
-            @Valid @RequestBody AddIncomeRequestDto dto
-    ) {
-        return ResponseEntity.
-                status(HttpStatus.CREATED)
-                .body(this.incomeService.addIncome(dto));
-    }
+        @PostMapping()
+        public ResponseEntity<BaseResponseDto<Income>> addIncome(
+                        @Valid @RequestBody AddIncomeRequestDto dto) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(this.incomeService.addIncome(dto));
+        }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Income>> updateIncome(
-            @PathVariable("id") UUID id,
-            @Valid @RequestBody UpdateIncomeRequestDto dto
-    ) {
-        return ResponseEntity
-                .ok(this.incomeService.updateIncome(id, dto));
-    }
+        @PutMapping("/{id}")
+        public ResponseEntity<BaseResponseDto<Income>> updateIncome(
+                        @PathVariable("id") UUID id,
+                        @Valid @RequestBody UpdateIncomeRequestDto dto) {
+                return ResponseEntity
+                                .ok(this.incomeService.updateIncome(id, dto));
+        }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Income>> getIncome(
-            @PathVariable("id") UUID id
-    ) {
-        return ResponseEntity.ok(this.incomeService.getIncomeById(id));
-    }
+        @GetMapping("/{id}")
+        public ResponseEntity<BaseResponseDto<Income>> getIncome(
+                        @PathVariable("id") UUID id) {
+                return ResponseEntity.ok(this.incomeService.getIncomeById(id));
+        }
 
-    @GetMapping("/month")
-    public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomesByMonth(
-            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
-            @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month
-            ) {
-        YearMonth defaultMonth = YearMonth.now();
+        @GetMapping("/month")
+        public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomesByMonth(
+                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+                        @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+                        @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month) {
+                YearMonth defaultMonth = YearMonth.now();
 
-        return ResponseEntity.ok(
-                this.incomeService.getAllIncomesByMonth(
-                        page, limit, month != null ? month : defaultMonth
-                )
-        );
-    }
+                return ResponseEntity.ok(
+                                this.incomeService.getAllIncomesByMonth(
+                                                page, limit, month != null ? month : defaultMonth));
+        }
 
-    @GetMapping()
-    public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomes(
-            @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(name= "limit", required = false, defaultValue = "10") Integer limit
-    ) {
+        @GetMapping()
+        public ResponseEntity<BaseResponseDto<PagedIncomeResponseDto>> getAllIncomes(
+                        @RequestParam(name = "page", required = false, defaultValue = "1") Integer page,
+                        @RequestParam(name = "limit", required = false, defaultValue = "10") Integer limit) {
 
-        return ResponseEntity.ok(
-                this.incomeService.getAllIncomes(page, limit)
-        );
-    }
+                return ResponseEntity.ok(
+                                this.incomeService.getAllIncomes(page, limit));
+        }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Object>> deleteIncome(
-            @PathVariable("id") UUID id
-    ) {
-        return ResponseEntity.ok(this.incomeService.deleteIncomeById(id));
-    }
+        @DeleteMapping("/{id}")
+        public ResponseEntity<BaseResponseDto<Object>> deleteIncome(
+                        @PathVariable("id") UUID id) {
+                return ResponseEntity.ok(this.incomeService.deleteIncomeById(id));
+        }
 
-    @DeleteMapping("/selected")
-    public ResponseEntity<BaseResponseDto<Object>> deleteIncomesByIds(
-            @RequestBody DeleteByIdsDto dto
-    ) {
-        return ResponseEntity.ok(this.incomeService.deleteIncomesByIds(dto));
-    }
+        @DeleteMapping("/selected")
+        public ResponseEntity<BaseResponseDto<Object>> deleteIncomesByIds(
+                        @RequestBody DeleteByIdsDto dto) {
+                return ResponseEntity.ok(this.incomeService.deleteIncomesByIds(dto));
+        }
 
-    @GetMapping("/monthly-totals")
-    public ResponseEntity<BaseResponseDto<List<MonthlyIncomeStatsResponseDto>>> getMonthlyTotals() {
-        return ResponseEntity.ok(
-                this.incomeService.getMonthlyIncomeStats()
-        );
-    }
+        @GetMapping("/monthly-totals")
+        public ResponseEntity<BaseResponseDto<List<MonthlyIncomeStatsResponseDto>>> getMonthlyTotals() {
+                return ResponseEntity.ok(
+                                this.incomeService.getMonthlyIncomeStats());
+        }
+
+        @GetMapping("/chart")
+        public ResponseEntity<BaseResponseDto<List<Income>>> getIncomesForChart(
+                        @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
+                        @RequestParam(value = "year", required = false) Integer year) {
+                return ResponseEntity.ok(
+                                this.incomeService.getIncomesForChart(month, year));
+        }
 }

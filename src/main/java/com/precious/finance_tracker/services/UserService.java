@@ -15,12 +15,8 @@ import com.precious.finance_tracker.repositories.UserRepository;
 import com.precious.finance_tracker.services.interfaces.IEmailService;
 import com.precious.finance_tracker.services.interfaces.IS3UploadService;
 import com.precious.finance_tracker.services.interfaces.IUserService;
-import jakarta.persistence.EntityManager;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
@@ -86,8 +82,7 @@ public class UserService implements IUserService {
                     .orElseThrow(() -> new NotFoundException("User not found"));
         } else {
             throw new IllegalArgumentException(
-                    "Unsupported identifier type: " + identifier.getClass()
-            );
+                    "Unsupported identifier type: " + identifier.getClass());
         }
 
         return UserResponseDto.fromEntity(user, s3UploadService);
@@ -96,17 +91,17 @@ public class UserService implements IUserService {
     public PagedUserResponseDto getUsers(int page, int limit) {
         Page<User> users = this.userRepository.findAll(PageRequest.of(page, limit));
 
-        return new PagedUserResponseDto(users.map(user ->
-                UserResponseDto.fromEntity(user, s3UploadService)
-                ));
+        return new PagedUserResponseDto(users.map(user -> UserResponseDto.fromEntity(user, s3UploadService)));
     }
 
     @Transactional
     public BaseResponseDto<UserResponseDto> updateUserDetails(UpdateUserRequestDto dto) {
         User user = this.getAuthenticatedUser();
 
-        if (dto.name() != null) user.setName(dto.name());
-        if (dto.currency() != null) user.setCurrency(dto.currency());
+        if (dto.name() != null)
+            user.setName(dto.name());
+        if (dto.currency() != null)
+            user.setCurrency(dto.currency());
         if (dto.avatarUrl() != null) {
             if (user.getAvatarUrl() != null) {
                 this.s3UploadService.deleteFromS3(user.getAvatarUrl());
@@ -167,7 +162,7 @@ public class UserService implements IUserService {
             String userEmail = auth.getName();
 
             return this.userRepository.findByEmail(userEmail)
-                            .orElseThrow(() -> new UnauthorizedException("Unauthorized user"));
+                    .orElseThrow(() -> new UnauthorizedException("Unauthorized user"));
         }
         return null;
     }

@@ -69,8 +69,8 @@ public class BankStatementAnalysis implements IBankStatementService {
 
         int numberOfDocuments = dto.getDocumentUrls().size();
 
-        if (numberOfDocuments > 4) {
-            throw new BadRequestException("A maximum of 4 bank statements are allowed per month");
+        if (numberOfDocuments > 3) {
+            throw new BadRequestException("A maximum of 3 bank statements are allowed per month");
         }
 
         Optional<BankStatement> existingStatement =
@@ -263,50 +263,40 @@ public class BankStatementAnalysis implements IBankStatementService {
                 .orElseThrow(() -> new NotFoundException("Statement not found"));
 
         log.info("Starting statement processing for user {}", user.getEmail());
-        boolean hasError = false;
 
-        List<GeminiTransactionResponseDto> allTransactions = new ArrayList<>();
+        try {
+            String formattedText = getPrompt(bankStatement.getMonth());
 
-        for (DocumentUrls doc : bankStatement.getDocumentUrls()) {
-            try {
-                String formattedText = getPrompt(bankStatement.getMonth());
+            GeminiRequest geminiRequest = this.buildGeminiRequest(
+                    formattedText,
+                    bankStatement.getDocumentUrls()
+            );
 
-                GeminiRequest geminiRequest = this.buildGeminiRequest(formattedText, doc);
-                GeminiResponse geminiResponse = this.geminiClientProxy.analyzeStatement(
-                        this.geminiApiKey,
-                        geminiRequest
-                );
+            GeminiResponse geminiResponse = this.geminiClientProxy.analyzeStatement(
+                    this.geminiApiKey,
+                    geminiRequest
+            );
 
-                GeminiResponse.Candidate candidate = geminiResponse.getCandidates().get(0);
+            GeminiResponse.Candidate candidate = geminiResponse.getCandidates().get(0);
 
-                log.info(candidate.getContent().getParts().get(0).getText());
-                if (!"STOP".equalsIgnoreCase(candidate.getFinishReason())) {
-                    log.warn(
-                            "Gemini did not finish correctly for doc: {}. Reason: {}",
-                            doc.getFileKey(),
-                            candidate.getFinishReason());
-                }
-
-                String rawJson = candidate.getContent().getParts().get(0).getText();
-                String cleanJson = rawJson.replaceAll("```json|```", "").trim();
-
-                List<GeminiTransactionResponseDto> transactions = this.deserializeGeminiResponseToDto(
-                        cleanJson
-                );
-                allTransactions.addAll(transactions);
-
-                Thread.sleep(3000);
-            } catch (Exception e) {
-                log.error("Failed to process document: {}", doc.getFileKey(), e);
-                hasError = true;
-                break;
+            if (!"STOP".equalsIgnoreCase(candidate.getFinishReason())) {
+                log.warn(
+                        "Gemini did not finish correctly. Reason: {}",
+                        candidate.getFinishReason());
             }
-        }
 
-        if (hasError) {
-            handleFailure(bankStatement, user);
-        } else {
+            String rawJson = candidate.getContent().getParts().get(0).getText();
+            String cleanJson = rawJson.replaceAll("```json|```", "").trim();
+
+            List<GeminiTransactionResponseDto> transactions = this.deserializeGeminiResponseToDto(
+                    cleanJson
+            );
+
+            List<GeminiTransactionResponseDto> allTransactions = this.deserializeGeminiResponseToDto(cleanJson);
             handleSuccess(bankStatement, user, allTransactions);
+        } catch (Exception e) {
+            log.error("Failed to process bank statement: {}", bankStatementId, e);
+            handleFailure(bankStatement, user);
         }
     }
 
@@ -345,12 +335,14 @@ public class BankStatementAnalysis implements IBankStatementService {
             Act as a high-precision financial data extractor. Output ONLY minified JSON.
             
             # TASK
-            Extract transactions from the attached bank statement (PDF/CSV/Excel).
+            You will receive one or more bank statement documents (PDF/CSV/Excel).
+            Extract and COMBINE transactions from ALL attached documents.
             ONLY extract transactions for the month %s. Ignore all other months.
             IF there are no transactions for the selected month, throw an error with the reason.
             
             # FILTERING RULES
-            1. EXCLUDE Personal Transfers: Ignore transfers between the user's own accounts (same name/inter-bank).
+            1. EXCLUDE Personal Transfers: Ignore transfers between the user's own accounts (same name/inter-bank) \
+               or with a description containing 'personal transfer';
             2. EXCLUDE Refunds: If a debit is followed by an identical credit refund, ignore both.
             3. OPAY SPECIFIC: Process 'Wallet Account' only. IGNORE 'Savings Account'. If an 'Owealth' entry \
                mirrors an immediate main transaction amount exactly, ignore the Owealth entry.
@@ -381,25 +373,30 @@ public class BankStatementAnalysis implements IBankStatementService {
         return String.format(promptText, month);
     }
 
-    private GeminiRequest buildGeminiRequest(String promptText, DocumentUrls doc) {
+    private GeminiRequest buildGeminiRequest(String promptText, List<DocumentUrls> docs) {
+        List<GeminiRequest.Part> parts = new ArrayList<>();
+
+        for (DocumentUrls doc : docs) {
+            GeminiRequest.Part filePart = new GeminiRequest.Part();
+            GeminiRequest.FileData fileData = new GeminiRequest.FileData();
+
+            String url = this.s3UploadService.generatePresignedGetUrl(doc.getFileKey());
+            fileData.setFileUri(url);
+            fileData.setMimeType(doc.getMimeType());
+            filePart.setFileData(fileData);
+            parts.add(filePart);
+        }
+
         GeminiRequest.Part textPart = new GeminiRequest.Part();
         textPart.setText(promptText);
-
-        GeminiRequest.Part filePart = new GeminiRequest.Part();
-        GeminiRequest.FileData fileData = new GeminiRequest.FileData();
-        String url = this.s3UploadService.generatePresignedGetUrl(doc.getFileKey());
-        fileData.setFileUri(url);
-        fileData.setMimeType(doc.getMimeType());
-
-        filePart.setFileData(fileData);
+        parts.add(textPart);
 
         GeminiRequest.Content content = new GeminiRequest.Content();
-        content.setParts(List.of(filePart, textPart));
+        content.setParts(parts);
         content.setRole("user");
 
         GeminiRequest.GenerationConfig config = new GeminiRequest.GenerationConfig();
         config.setResponseMimeType("application/json");
-        config.setMaxOutputTokens(8192);
 
         GeminiRequest request = new GeminiRequest();
         request.setContents(List.of(content));

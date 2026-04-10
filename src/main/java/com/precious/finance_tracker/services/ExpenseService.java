@@ -3,6 +3,7 @@ package com.precious.finance_tracker.services;
 import com.precious.finance_tracker.dtos.BaseResponseDto;
 import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.expense.AddExpenseRequestDto;
+import com.precious.finance_tracker.dtos.expense.ExpenseByCategoryDto;
 import com.precious.finance_tracker.dtos.expense.MonthlyExpenseStatsResponseDto;
 import com.precious.finance_tracker.dtos.expense.PagedExpenseResponseDto;
 import com.precious.finance_tracker.dtos.expense.UpdateExpenseRequestDto;
@@ -286,5 +287,35 @@ public class ExpenseService implements IExpenseService {
         public BigDecimal getTotalExpenseByMonth(UUID userId, YearMonth month) {
                 return this.expenseRepository.getTotalExpenseByMonth(
                                 userId, month);
+        }
+
+        public BaseResponseDto<List<ExpenseByCategoryDto>> getExpensesByCategory(
+                        YearMonth month, Integer year) {
+                User user = this.userService.getAuthenticatedUser();
+
+                List<Object[]> results;
+
+                if (year != null) {
+                        results = this.expenseRepository
+                                        .sumExpenseGroupedByCategoryAndYear(user.getId(), year);
+                } else {
+                        results = this.expenseRepository
+                                        .sumExpenseGroupedByCategoryAndMonth(
+                                                        user.getId(),
+                                                        month != null ? month : YearMonth.now());
+                }
+
+                List<ExpenseByCategoryDto> data = results.stream()
+                                .map(row -> new ExpenseByCategoryDto(
+                                                (ExpenseCategory) row[0],
+                                                (BigDecimal) row[1]))
+                                .toList();
+
+                log.info("Successfully retrieved expenses by category for user {}", user.getEmail());
+                return BaseResponseDto.<List<ExpenseByCategoryDto>>builder()
+                                .status("Success")
+                                .message("Successfully retrieved expenses by category")
+                                .data(data)
+                                .build();
         }
 }

@@ -222,4 +222,25 @@ public class IncomeService implements IIncomeService {
                 userId, month
         );
     }
+
+    public BaseResponseDto<List<Income>> getIncomesForChart(YearMonth month, Integer year) {
+        User user = this.userService.getAuthenticatedUser();
+
+        List<Income> incomes;
+
+        if (year != null) {
+            incomes = this.incomeRepository.findAllByUserIdAndYear(user.getId(), year);
+        } else {
+            incomes = this.incomeRepository.findAllByUserIdAndMonthOrderByTransactionDateTimeDesc(
+                    user.getId(),
+                    month != null ? month : YearMonth.now());
+        }
+
+        log.info("Successfully retrieved incomes for chart for user {}", user.getEmail());
+        return BaseResponseDto.<List<Income>>builder()
+                .status("Success")
+                .message("Successfully retrieved incomes")
+                .data(incomes)
+                .build();
+    }
 }

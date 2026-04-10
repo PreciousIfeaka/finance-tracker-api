@@ -69,4 +69,34 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     );
 
     Optional<Expense> findByIdAndUserId(UUID id, UUID userId);
+
+    @Query("""
+        SELECT e.category AS category,
+               COALESCE(SUM(e.amount), 0) AS total
+        FROM Expense e
+        WHERE e.user.id = :userId
+          AND e.deletedAt IS NULL
+          AND e.month = :month
+        GROUP BY e.category
+        ORDER BY total DESC
+    """)
+    List<Object[]> sumExpenseGroupedByCategoryAndMonth(
+            @Param("userId") UUID userId,
+            @Param("month") YearMonth month
+    );
+
+    @Query("""
+        SELECT e.category AS category,
+               COALESCE(SUM(e.amount), 0) AS total
+        FROM Expense e
+        WHERE e.user.id = :userId
+          AND e.deletedAt IS NULL
+          AND YEAR(e.transactionDateTime) = :year
+        GROUP BY e.category
+        ORDER BY total DESC
+    """)
+    List<Object[]> sumExpenseGroupedByCategoryAndYear(
+            @Param("userId") UUID userId,
+            @Param("year") int year
+    );
 }

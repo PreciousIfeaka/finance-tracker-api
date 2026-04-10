@@ -3,6 +3,7 @@ package com.precious.finance_tracker.controllers;
 import com.precious.finance_tracker.dtos.BaseResponseDto;
 import com.precious.finance_tracker.dtos.budget.DeleteByIdsDto;
 import com.precious.finance_tracker.dtos.expense.AddExpenseRequestDto;
+import com.precious.finance_tracker.dtos.expense.ExpenseByCategoryDto;
 import com.precious.finance_tracker.dtos.expense.MonthlyExpenseStatsResponseDto;
 import com.precious.finance_tracker.dtos.expense.PagedExpenseResponseDto;
 import com.precious.finance_tracker.dtos.expense.UpdateExpenseRequestDto;
@@ -12,14 +13,12 @@ import com.precious.finance_tracker.services.ExpenseService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
@@ -30,86 +29,80 @@ import java.util.UUID;
 @Tag(name = "Expenses")
 @SecurityRequirement(name = "bearerAuth")
 public class ExpenseController {
-    private final ExpenseService expenseService;
+        private final ExpenseService expenseService;
 
-    @PostMapping()
-    public ResponseEntity<BaseResponseDto<Expense>> addExpense(
-            @Valid @RequestBody AddExpenseRequestDto dto
-    ) {
-        return ResponseEntity.
-                status(HttpStatus.CREATED)
-                .body(this.expenseService.addExpenseData(dto));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Expense>> updateExpense(
-            @PathVariable("id") UUID id,
-            @Valid @RequestBody UpdateExpenseRequestDto dto
-    ) {
-        return ResponseEntity
-                .ok(this.expenseService.updateExpense(id, dto));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Expense>> getExpense(
-            @PathVariable("id") UUID id
-    ) {
-        return ResponseEntity.ok(this.expenseService.getExpenseById(id));
-    }
-
-    @GetMapping("/month")
-    public ResponseEntity<BaseResponseDto<PagedExpenseResponseDto>> getAllExpensesByMonth(
-            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
-            @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
-            @RequestParam(value = "category", required = false) ExpenseCategory category
-            ) {
-        YearMonth defaultMonth = YearMonth.now();
-
-        if (category != null) {
-            return ResponseEntity.ok(
-                    this.expenseService.getAllExpensesByMonthAndCategory(
-                            page, limit, month != null ? month : defaultMonth, category
-                    )
-            );
+        @PostMapping()
+        public ResponseEntity<BaseResponseDto<Expense>> addExpense(
+                        @Valid @RequestBody AddExpenseRequestDto dto) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(this.expenseService.addExpenseData(dto));
         }
 
-        return ResponseEntity.ok(
-                this.expenseService.getAllExpensesByMonth(
-                        page, limit, month != null ? month : defaultMonth
-                )
-        );
-    }
+        @PutMapping("/{id}")
+        public ResponseEntity<BaseResponseDto<Expense>> updateExpense(
+                        @PathVariable("id") UUID id,
+                        @Valid @RequestBody UpdateExpenseRequestDto dto) {
+                return ResponseEntity
+                                .ok(this.expenseService.updateExpense(id, dto));
+        }
 
-    @GetMapping()
-    public ResponseEntity<BaseResponseDto<PagedExpenseResponseDto>> getAllExpenses(
-            @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
-            @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit
-    ) {
+        @GetMapping("/{id}")
+        public ResponseEntity<BaseResponseDto<Expense>> getExpense(
+                        @PathVariable("id") UUID id) {
+                return ResponseEntity.ok(this.expenseService.getExpenseById(id));
+        }
 
-        return ResponseEntity.ok(
-                this.expenseService.getAllExpenses(page, limit)
-        );
-    }
+        @GetMapping("/month")
+        public ResponseEntity<BaseResponseDto<PagedExpenseResponseDto>> getAllExpensesByMonth(
+                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+                        @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit,
+                        @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
+                        @RequestParam(value = "category", required = false) ExpenseCategory category) {
+                YearMonth defaultMonth = YearMonth.now();
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<BaseResponseDto<Object>> deleteExpense(
-            @PathVariable("id") UUID id
-    ) {
-        return ResponseEntity.ok(this.expenseService.deleteExpenseById(id));
-    }
+                if (category != null) {
+                        return ResponseEntity.ok(
+                                        this.expenseService.getAllExpensesByMonthAndCategory(
+                                                        page, limit, month != null ? month : defaultMonth, category));
+                }
 
-    @DeleteMapping("/selected")
-    public ResponseEntity<BaseResponseDto<Object>> deleteExpensesByIds(
-            @RequestBody DeleteByIdsDto dto
-    ) {
-        return ResponseEntity.ok(this.expenseService.deleteExpensesByIds(dto));
-    }
+                return ResponseEntity.ok(
+                                this.expenseService.getAllExpensesByMonth(
+                                                page, limit, month != null ? month : defaultMonth));
+        }
 
-    @GetMapping("/monthly-totals")
-    public ResponseEntity<BaseResponseDto<List<MonthlyExpenseStatsResponseDto>>> getMonthlyTotals() {
-        return ResponseEntity.ok(
-                this.expenseService.getMonthlyExpenseStats()
-        );
-    }
+        @GetMapping()
+        public ResponseEntity<BaseResponseDto<PagedExpenseResponseDto>> getAllExpenses(
+                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer page,
+                        @RequestParam(value = "limit", required = false, defaultValue = "10") Integer limit) {
+
+                return ResponseEntity.ok(
+                                this.expenseService.getAllExpenses(page, limit));
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<BaseResponseDto<Object>> deleteExpense(
+                        @PathVariable("id") UUID id) {
+                return ResponseEntity.ok(this.expenseService.deleteExpenseById(id));
+        }
+
+        @DeleteMapping("/selected")
+        public ResponseEntity<BaseResponseDto<Object>> deleteExpensesByIds(
+                        @RequestBody DeleteByIdsDto dto) {
+                return ResponseEntity.ok(this.expenseService.deleteExpensesByIds(dto));
+        }
+
+        @GetMapping("/monthly-totals")
+        public ResponseEntity<BaseResponseDto<List<MonthlyExpenseStatsResponseDto>>> getMonthlyTotals() {
+                return ResponseEntity.ok(
+                                this.expenseService.getMonthlyExpenseStats());
+        }
+
+        @GetMapping("/by-category")
+        public ResponseEntity<BaseResponseDto<List<ExpenseByCategoryDto>>> getExpensesByCategory(
+                        @RequestParam(value = "month", required = false) @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
+                        @RequestParam(value = "year", required = false) Integer year) {
+                return ResponseEntity.ok(
+                                this.expenseService.getExpensesByCategory(month, year));
+        }
 }
